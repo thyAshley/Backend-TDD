@@ -1,0 +1,15 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "precache-manifest.b6332d7bb5212245362674ce688074cf.js",
+  "scripts": {
+    "start": "npx http-server -c-1 -p 8080 -P http://localhost:3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^0.12.3"
+  }
+}
