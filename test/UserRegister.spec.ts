@@ -60,25 +60,6 @@ describe("User Registration Route", () => {
     expect(savedUser.password).toHaveLength(60);
   });
 
-  it("returns 400 when username is null", async () => {
-    const response = await postValidUser({
-      username: null,
-      email: "admin@test.com",
-      password: "123123",
-    });
-
-    expect(response.status).toBe(400);
-  });
-
-  it("returns 400 when email is null", async () => {
-    const response = await postValidUser({
-      username: "admin",
-      email: null,
-      password: "123123",
-    });
-    expect(response.status).toBe(400);
-  });
-
   it("returns all error message when username, email and password is null", async () => {
     const response = await postValidUser({
       username: null,
@@ -90,18 +71,42 @@ describe("User Registration Route", () => {
     );
   });
 
-  it.each([
-    ["username", "Username cannot be null"],
-    ["email", "Email cannot be null"],
-    ["password", "Password cannot be null"],
-  ])("if %s is null', %s is received", async (field, message) => {
+  it.each`
+    field         | value             | expectedMessage
+    ${"username"} | ${null}           | ${"Username cannot be null"}
+    ${"username"} | ${"adm"}          | ${"Username must be between 4 and 32 characters"}
+    ${"username"} | ${"a".repeat(33)} | ${"Username must be between 4 and 32 characters"}
+    ${"password"} | ${null}           | ${"Password cannot be null"}
+    ${"email"}    | ${null}           | ${"Email cannot be null"}
+    ${"email"}    | ${"mail.com"}     | ${"Email is not valid"}
+    ${"email"}    | ${"admin.mail.com"}     | ${"Email is not valid"}
+  `(
+    "if $field is $value', $expectedMessage is received",
+    async ({ field, expectedMessage, value }) => {
+      const user = <IDic>{
+        username: "admin",
+        email: "test@gmail.com",
+        password: "123123",
+      };
+      user[field] = value;
+      const response = await postValidUser(user);
+      expect(response.body.validationErrors[field]).toBe(expectedMessage);
+    }
+  );
+
+  it.each`
+    field
+    ${"username"}
+    ${"password"}
+    ${"email"}
+  `("if $field is null, expect status code 400", async ({ field }) => {
     const user = <IDic>{
-      username: null,
-      email: "test@gmail.com",
+      username: "admin",
+      email: "admin@test.com",
       password: "123123",
     };
     user[field] = null;
     const response = await postValidUser(user);
-    expect(response.body.validationErrors[field]).toBe(message);
+    expect(response.status).toBe(400);
   });
 });
