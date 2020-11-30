@@ -63,7 +63,7 @@ describe("User Registration Route", () => {
     expect(response.status).toBe(400);
   });
 
-  it("returns username cannot be null when username is null", async () => {
+  it("returns 'Username cannot be null' when username is null", async () => {
     const response = await postValidUser({
       username: null,
       email: "admin@test.com",
@@ -83,7 +83,7 @@ describe("User Registration Route", () => {
     expect(response.status).toBe(400);
   });
 
-  it("returns email cannot be null when email is null", async () => {
+  it("returns 'Email cannot be null' when email is null", async () => {
     const response = await postValidUser({
       username: "admin",
       email: null,
@@ -91,21 +91,25 @@ describe("User Registration Route", () => {
     });
     expect(response.body.validationErrors.email).toBe("Email cannot be null");
   });
+  it("returns 'Password cannot be null' when email is null", async () => {
+    const response = await postValidUser({
+      username: "admin",
+      email: "test@work.com",
+      password: null,
+    });
+    expect(response.body.validationErrors.password).toBe(
+      "Password cannot be null"
+    );
+  });
 
-  it("returns errors for both username and email when username and email is null", async () => {
+  it("returns all error message when username, email and password is null", async () => {
     const response = await postValidUser({
       username: null,
       email: null,
-      password: "123123",
+      password: null,
     });
-    /*
-    validationErrors = {
-      username: ...,
-      email: ...
-    }
-    */
     expect(Object.keys(response.body.validationErrors)).toEqual(
-      expect.arrayContaining(["email", "username"])
+      expect.arrayContaining(["email", "username", "password"])
     );
   });
 });

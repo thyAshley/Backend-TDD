@@ -1,12 +1,15 @@
 import express from "express";
+import { check } from "express-validator";
 
 import { registerUser } from "../controllers/userController";
-import {
-  validateUsername,
-  validateEmail,
-} from "../middleware/validationMiddleWare";
 const route = express.Router();
 
-route.post("/", validateUsername, validateEmail, registerUser);
+route.post(
+  "/",
+  check("username", "Username cannot be null").notEmpty(),
+  check("email", "Email cannot be null").notEmpty(),
+  check("password", "Password cannot be null").notEmpty(),
+  registerUser
+);
 
 export default route;
