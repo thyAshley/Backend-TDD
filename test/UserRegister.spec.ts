@@ -4,6 +4,13 @@ import User from "../src/model/User";
 import app from "../src/app";
 import { sequelize } from "../src/db/database";
 
+interface IDic {
+  [key: string]: string;
+  username: string;
+  email: string;
+  password: string;
+}
+
 describe("User Registration Route", () => {
   beforeAll(() => {
     return sequelize.sync();
@@ -63,17 +70,6 @@ describe("User Registration Route", () => {
     expect(response.status).toBe(400);
   });
 
-  it("returns 'Username cannot be null' when username is null", async () => {
-    const response = await postValidUser({
-      username: null,
-      email: "admin@test.com",
-      password: "123123",
-    });
-    expect(response.body.validationErrors.username).toBe(
-      "Username cannot be null"
-    );
-  });
-
   it("returns 400 when email is null", async () => {
     const response = await postValidUser({
       username: "admin",
@@ -81,25 +77,6 @@ describe("User Registration Route", () => {
       password: "123123",
     });
     expect(response.status).toBe(400);
-  });
-
-  it("returns 'Email cannot be null' when email is null", async () => {
-    const response = await postValidUser({
-      username: "admin",
-      email: null,
-      password: "123123",
-    });
-    expect(response.body.validationErrors.email).toBe("Email cannot be null");
-  });
-  it("returns 'Password cannot be null' when email is null", async () => {
-    const response = await postValidUser({
-      username: "admin",
-      email: "test@work.com",
-      password: null,
-    });
-    expect(response.body.validationErrors.password).toBe(
-      "Password cannot be null"
-    );
   });
 
   it("returns all error message when username, email and password is null", async () => {
@@ -111,5 +88,20 @@ describe("User Registration Route", () => {
     expect(Object.keys(response.body.validationErrors)).toEqual(
       expect.arrayContaining(["email", "username", "password"])
     );
+  });
+
+  it.each([
+    ["username", "Username cannot be null"],
+    ["email", "Email cannot be null"],
+    ["password", "Password cannot be null"],
+  ])("if %s is null', %s is received", async (field, message) => {
+    const user = <IDic>{
+      username: null,
+      email: "test@gmail.com",
+      password: "123123",
+    };
+    user[field] = null;
+    const response = await postValidUser(user);
+    expect(response.body.validationErrors[field]).toBe(message);
   });
 });
