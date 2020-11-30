@@ -104,9 +104,8 @@ describe("User Registration Route", () => {
       email: ...
     }
     */
-    expect(Object.keys(response.body.validationErrors)).toEqual([
-      "username",
-      "email",
-    ]);
+    expect(Object.keys(response.body.validationErrors)).toEqual(
+      expect.arrayContaining(["email", "username"])
+    );
   });
 });
