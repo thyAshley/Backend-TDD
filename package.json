@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=dev nodemon index.ts",
     "client": "http-server -c-1 -p 8080 -P http://localhost:3000",
-    "test": "cross-env NODE_ENV=dev jest --watchAll"
+    "test": "cross-env NODE_ENV=test jest --watchAll"
   },
   "keywords": [],
   "author": "",

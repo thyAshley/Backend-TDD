@@ -13,12 +13,13 @@ describe("User Registration Route", () => {
     return User.destroy({ truncate: true });
   });
 
-  const postValidUser = () => {
-    return request(app).post("/api/v1/users").send({
-      username: "admin",
-      email: "admin@test.com",
-      password: "123123",
-    });
+  const validUser = {
+    username: "admin",
+    email: "admin@test.com",
+    password: "123123",
+  };
+  const postValidUser = (user = validUser) => {
+    return request(app).post("/api/v1/users").send(user);
   };
 
   it("should return 200 OK when signup request is valid", async () => {
@@ -50,5 +51,62 @@ describe("User Registration Route", () => {
     const userList = await User.findAll();
     const savedUser = userList[0];
     expect(savedUser.password).toHaveLength(60);
+  });
+
+  it("returns 400 when username is null", async () => {
+    const response = await postValidUser({
+      username: null,
+      email: "admin@test.com",
+      password: "123123",
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("returns username cannot be null when username is null", async () => {
+    const response = await postValidUser({
+      username: null,
+      email: "admin@test.com",
+      password: "123123",
+    });
+    expect(response.body.validationErrors.username).toBe(
+      "Username cannot be null"
+    );
+  });
+
+  it("returns 400 when email is null", async () => {
+    const response = await postValidUser({
+      username: "admin",
+      email: null,
+      password: "123123",
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it("returns email cannot be null when email is null", async () => {
+    const response = await postValidUser({
+      username: "admin",
+      email: null,
+      password: "123123",
+    });
+    expect(response.body.validationErrors.email).toBe("Email cannot be null");
+  });
+
+  it("returns errors for both username and email when username and email is null", async () => {
+    const response = await postValidUser({
+      username: null,
+      email: null,
+      password: "123123",
+    });
+    /*
+    validationErrors = {
+      username: ...,
+      email: ...
+    }
+    */
+    expect(Object.keys(response.body.validationErrors)).toEqual([
+      "username",
+      "email",
+    ]);
   });
 });
