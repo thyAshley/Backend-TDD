@@ -35,9 +35,8 @@ export const registerUser = async (req: Request, res: Response) => {
       activationToken,
     });
     await sendAccountActivation(email, activationToken);
-
     return res.status(200).json({ message: "User created" });
   } catch (error) {
-    return res.status(400).json(error);
+    return res.status(502).json({ message: "E-mail Failure" });
   }
 };

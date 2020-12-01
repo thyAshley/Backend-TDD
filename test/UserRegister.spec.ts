@@ -1,7 +1,6 @@
 import request from "supertest";
-import nodemailer from "nodemailer"; //do
-import stubTransport from "nodemailer-stub-transport";
 
+import * as EmailService from "../src/email/EmailService";
 import User from "../src/model/User";
 import app from "../src/app";
 import { sequelize } from "../src/db/database";
@@ -158,15 +157,22 @@ describe("User Registration Route", () => {
     const savedUser = users[0];
     expect(savedUser.activationToken).toBeTruthy();
   });
-  it("sends an Account activation email with activationToken", async () => {
-    await postValidUser();
-    const user = await User.findOne({ where: { email: validUser.email } });
-    const transport = nodemailer.createTransport(stubTransport());
-    const send = await transport.sendMail({
-      from: "Admin <admin@tdd.com>",
-      to: user.email,
-      subject: "Account Activation",
-      html: `Token is ${user.activationToken}`,
-    });
+  it("return 502 Bad Gateway when sending email fails", async () => {
+    const mockSendAccountActivation = jest
+      .spyOn(EmailService, "sendAccountActivation")
+      .mockRejectedValueOnce({
+        message: "Failed to deliver email",
+      });
+    const response = await postValidUser();
+    expect(response.status).toBe(502);
+  });
+  it("return Email failure message when sending email fails", async () => {
+    const mockSendAccountActivation = jest
+      .spyOn(EmailService, "sendAccountActivation")
+      .mockRejectedValueOnce({
+        message: "Failed to deliver email",
+      });
+    const response = await postValidUser();
+    expect(response.body.message).toBe("E-mail Failure");
   });
 });
