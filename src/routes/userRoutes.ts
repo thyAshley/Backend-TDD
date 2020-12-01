@@ -1,7 +1,9 @@
 import express from "express";
 import { check } from "express-validator";
 
+import { findByEmail } from "../utils/userUtils";
 import { registerUser } from "../controllers/userController";
+
 const route = express.Router();
 
 route.post(
@@ -16,8 +18,19 @@ route.post(
     .notEmpty()
     .bail()
     .isEmail()
-    .withMessage("Email is not valid"),
-  check("password", "Password cannot be null").notEmpty(),
+    .withMessage("Email is not valid")
+    .bail()
+    .custom(findByEmail),
+  check("password", "Password cannot be null")
+    .notEmpty()
+    .bail()
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters")
+    .bail()
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/)
+    .withMessage(
+      "Password must have at least 1 uppercase, 1 lowercase and 1 number"
+    ),
   registerUser
 );
 
