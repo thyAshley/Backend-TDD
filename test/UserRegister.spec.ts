@@ -1,9 +1,9 @@
 import request from "supertest";
 
-import * as EmailService from "../src/email/EmailService";
 import User from "../src/model/User";
 import app from "../src/app";
 import { sequelize } from "../src/db/database";
+import { SMTPServer } from "smtp-server";
 
 interface IDic {
   [key: string]: string;
@@ -12,12 +12,38 @@ interface IDic {
   password: string;
 }
 
+let lastMail: string;
+let simulateSMTPFailure = false;
+const server = new SMTPServer({
+  authOptional: true,
+  onData(stream, session, callball) {
+    let mail: string;
+    stream.on("data", (data) => {
+      mail += data.toString();
+    });
+    stream.on("end", () => {
+      if (simulateSMTPFailure) {
+        const err = new Error("invalid mailbox");
+        callball(err);
+      }
+      lastMail = mail;
+      callball();
+    });
+  },
+});
+
 describe("User Registration Route", () => {
-  beforeAll(() => {
+  beforeAll(async () => {
+    await server.listen(8587, "localhost");
     return sequelize.sync();
   });
 
+  afterAll(async () => {
+    await server.close();
+  });
+
   beforeEach(() => {
+    simulateSMTPFailure = false;
     return User.destroy({ truncate: true });
   });
 
@@ -158,21 +184,21 @@ describe("User Registration Route", () => {
     expect(savedUser.activationToken).toBeTruthy();
   });
   it("return 502 Bad Gateway when sending email fails", async () => {
-    const mockSendAccountActivation = jest
-      .spyOn(EmailService, "sendAccountActivation")
-      .mockRejectedValueOnce({
-        message: "Failed to deliver email",
-      });
+    simulateSMTPFailure = true;
     const response = await postValidUser();
     expect(response.status).toBe(502);
   });
   it("return Email failure message when sending email fails", async () => {
-    const mockSendAccountActivation = jest
-      .spyOn(EmailService, "sendAccountActivation")
-      .mockRejectedValueOnce({
-        message: "Failed to deliver email",
-      });
+    simulateSMTPFailure = true;
     const response = await postValidUser();
     expect(response.body.message).toBe("E-mail Failure");
+  });
+  it("send an account action email with activationToken", async () => {
+    await postValidUser();
+    await server.close();
+    const user = await User.findAll();
+    expect(lastMail).toContain(user[0].email);
+    expect(lastMail).toContain(user[0].activationToken);
+    console.log(lastMail);
   });
 });

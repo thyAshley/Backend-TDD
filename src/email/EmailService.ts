@@ -1,7 +1,12 @@
 import nodemailer from "nodemailer";
-import nodemailerStub from "nodemailer-stub-transport";
 
-const transporter = nodemailer.createTransport(nodemailerStub());
+const transporter = nodemailer.createTransport({
+  host: "localhost",
+  port: 8587,
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
 
 export const sendAccountActivation = async (
   email: string,
@@ -11,7 +16,7 @@ export const sendAccountActivation = async (
     from: "Admin <admin@tdd.com>",
     to: email,
     subject: "Account Activation",
-    html: `Token is ${activationToken}
+    html: `Your Activation Token is ${activationToken}, Please ignore this email if you did not request this
     `,
   });
 };
