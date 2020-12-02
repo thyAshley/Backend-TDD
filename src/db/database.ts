@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
-const config = require("config");
+import config from "config";
 
-const dbConfig = config.get("database");
+const dbConfig = config.get<any>("database");
 export const sequelize = new Sequelize(
   dbConfig.database,
   dbConfig.username,

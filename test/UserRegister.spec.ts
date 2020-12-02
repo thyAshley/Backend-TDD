@@ -152,6 +152,7 @@ describe("User Registration Route", () => {
     const response = await postValidUser();
     expect(response.body.validationErrors.email).toBe("E-mail already exist");
   });
+
   it("return error for both username is null and email is in use", async () => {
     await User.create({ ...validUser });
     const response = await postValidUser({
@@ -261,6 +262,7 @@ describe("When token is not valid", () => {
   });
 
   it("return error message when token is wrong", () => {
+    console.log(response.body);
     expect(response.body.message).toBe(
       "Invalid token sent, Account Activation Failed"
     );

@@ -1,22 +1,28 @@
 import nodemailer from "nodemailer";
+import config from "config";
 
-const transporter = nodemailer.createTransport({
-  host: "localhost",
-  port: 8587,
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+const mailConfig = config.get<any>("mail");
+
+const transporter = nodemailer.createTransport({ ...mailConfig });
 
 export const sendAccountActivation = async (
   email: string,
   activationToken: string
 ) => {
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: "Admin <admin@tdd.com>",
     to: email,
     subject: "Account Activation",
-    html: `Your Activation Token is ${activationToken}, Please ignore this email if you did not request this
+    html: `
+    <div>
+      <b>Please click below link to activate your account</b>
+    </div>
+    <div>
+      Your Activation Token is ${activationToken}, Please ignore this email if you did not request this
+    </div>
     `,
   });
+  if (process.env.NODE_ENV === "dev") {
+    console.log("url: " + nodemailer.getTestMessageUrl(info));
+  }
 };
