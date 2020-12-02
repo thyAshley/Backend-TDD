@@ -5,6 +5,7 @@ import crypto from "crypto";
 
 import { sendAccountActivation } from "../email/EmailService";
 import User from "../model/User";
+import { activateUserByToken } from "../utils/userUtils";
 
 interface IDictionary {
   [key: string]: string;
@@ -38,5 +39,16 @@ export const registerUser = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "User created" });
   } catch (error) {
     return res.status(502).json({ message: "E-mail Failure" });
+  }
+};
+
+export const activateUserAccount = async (req: Request, res: Response) => {
+  const activationToken = req.params.token;
+
+  try {
+    await activateUserByToken(activationToken);
+    return res.send({ message: "Account has been activated" });
+  } catch (error) {
+    return res.status(400).send({ message: error.message });
   }
 };

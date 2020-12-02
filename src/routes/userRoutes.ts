@@ -2,7 +2,10 @@ import express from "express";
 import { check } from "express-validator";
 
 import { findByEmail } from "../utils/userUtils";
-import { registerUser } from "../controllers/userController";
+import {
+  registerUser,
+  activateUserAccount,
+} from "../controllers/userController";
 
 const route = express.Router();
 
@@ -33,5 +36,7 @@ route.post(
     ),
   registerUser
 );
+
+route.post("/activation/:token", activateUserAccount);
 
 export default route;

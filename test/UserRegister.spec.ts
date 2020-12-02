@@ -10,10 +10,13 @@ interface IDic {
   username: string;
   email: string;
   password: string;
+  activationToken: string;
+  active: string;
 }
 
 let lastMail: string;
 let simulateSMTPFailure = false;
+
 const server = new SMTPServer({
   authOptional: true,
   onData(stream, session, callball) {
@@ -32,6 +35,16 @@ const server = new SMTPServer({
   },
 });
 
+const validUser = {
+  username: "admin",
+  email: "admin@test.com",
+  password: "P4ssword",
+};
+
+const postValidUser = (user = validUser) => {
+  return request(app).post("/api/v1/users").send(user);
+};
+
 describe("User Registration Route", () => {
   beforeAll(async () => {
     await server.listen(8587, "localhost");
@@ -46,15 +59,6 @@ describe("User Registration Route", () => {
     simulateSMTPFailure = false;
     return User.destroy({ truncate: true });
   });
-
-  const validUser = {
-    username: "admin",
-    email: "admin@test.com",
-    password: "P4ssword",
-  };
-  const postValidUser = (user = validUser) => {
-    return request(app).post("/api/v1/users").send(user);
-  };
 
   it("should return 200 OK when signup request is valid", async () => {
     const response = await postValidUser();
@@ -199,6 +203,66 @@ describe("User Registration Route", () => {
     const user = await User.findAll();
     expect(lastMail).toContain(user[0].email);
     expect(lastMail).toContain(user[0].activationToken);
-    console.log(lastMail);
+  });
+});
+
+describe("When token is valid", () => {
+  let user: User;
+  let response: request.Response;
+  beforeAll(async () => {
+    await postValidUser();
+    user = await User.findOne({ where: { email: validUser.email } });
+    const token = user.activationToken;
+    response = await request(app)
+      .post(`/api/v1/users/activation/${token}`)
+      .send();
+    user = await User.findOne({ where: { email: validUser.email } });
+  });
+  afterAll(async () => {
+    return await User.destroy({ truncate: true });
+  });
+  it("should set user to active", () => {
+    expect(user.active).toBe(true);
+  });
+
+  it("Set user token to null after activation", () => {
+    expect(user.activationToken).toBe(null);
+  });
+
+  it("Return success message", () => {
+    expect(response.body.message).toBe("Account has been activated");
+  });
+});
+
+describe("When token is not valid", () => {
+  let user: User;
+  let response: request.Response;
+  beforeAll(async () => {
+    await postValidUser();
+    user = await User.findOne({ where: { email: validUser.email } });
+    response = await request(app)
+      .post(`/api/v1/users/activation/invalidToken`)
+      .send();
+    user = await User.findOne({ where: { email: validUser.email } });
+  });
+  afterAll(async () => {
+    return await User.destroy({ truncate: true });
+  });
+  it("should not set user to active", () => {
+    expect(user.active).toBe(false);
+  });
+
+  it("should not set user token to null", () => {
+    expect(user.activationToken).not.toBe(null);
+  });
+
+  it("return bad request 400 when token is wrong", () => {
+    expect(response.status).toBe(400);
+  });
+
+  it("return error message when token is wrong", () => {
+    expect(response.body.message).toBe(
+      "Invalid token sent, Account Activation Failed"
+    );
   });
 });
