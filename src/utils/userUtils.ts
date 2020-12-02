@@ -1,8 +1,6 @@
 import User from "../model/User";
+import { InvalidTokenException } from "../utils/errorUtils";
 
-function InvalidTokenException() {
-  this.message = "invalid token";
-}
 export const findByEmail = async (email: string) => {
   const user = await User.findOne({ where: { email } });
   if (user) throw new Error("E-mail already exist");
@@ -11,11 +9,9 @@ export const findByEmail = async (email: string) => {
 export const activateUserByToken = async (token: string) => {
   const user = await User.findOne({ where: { activationToken: token } });
   if (!user) {
-    console.log("no user");
-    throw new Error("Invalid token sent, Account Activation Failed");
+    throw new InvalidTokenException();
   }
   user.active = true;
   user.activationToken = null;
   await user.save();
-  return;
 };

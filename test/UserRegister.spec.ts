@@ -257,14 +257,17 @@ describe("When token is not valid", () => {
     expect(user.activationToken).not.toBe(null);
   });
 
-  it("return bad request 400 when token is wrong", () => {
+  it("return bad request 400", () => {
     expect(response.status).toBe(400);
   });
 
-  it("return error message when token is wrong", () => {
-    console.log(response.body);
+  it("return error message", () => {
     expect(response.body.message).toBe(
       "Invalid token sent, Account Activation Failed"
     );
+  });
+
+  it("return exception type", () => {
+    expect(response.body.name).toBe("InvalidTokenException");
   });
 });

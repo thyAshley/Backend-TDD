@@ -42,13 +42,18 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-export const activateUserAccount = async (req: Request, res: Response) => {
+export const activateUserAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const activationToken = req.params.token;
 
   try {
     await activateUserByToken(activationToken);
     return res.send({ message: "Account has been activated" });
   } catch (error) {
-    return res.status(400).send({ message: error.message });
+    res.status(400);
+    next(error);
   }
 };
