@@ -5,3 +5,11 @@ export class InvalidTokenException extends Error {
     this.name = "InvalidTokenException";
   }
 }
+
+export class EmailException extends Error {
+  constructor() {
+    super();
+    this.message = "E-mail already exist";
+    this.name = "EmailException";
+  }
+}

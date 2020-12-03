@@ -40,7 +40,6 @@ const validUser = {
   email: "admin@test.com",
   password: "P4ssword",
 };
-
 const postValidUser = (user = validUser) => {
   return request(app).post("/api/v1/users").send(user);
 };
@@ -193,10 +192,20 @@ describe("User Registration Route", () => {
     const response = await postValidUser();
     expect(response.status).toBe(502);
   });
+
   it("return Email failure message when sending email fails", async () => {
     simulateSMTPFailure = true;
     const response = await postValidUser();
     expect(response.body.message).toBe("E-mail Failure");
+  });
+
+  it("returns Validation Failure mnessage in error response body when validation fail", async () => {
+    const response = await postValidUser({
+      username: null,
+      email: "1",
+      password: "2",
+    });
+    expect(response.body.message).toBe("Validation Failure");
   });
   it("send an account action email with activationToken", async () => {
     await postValidUser();
@@ -269,5 +278,19 @@ describe("When token is not valid", () => {
 
   it("return exception type", () => {
     expect(response.body.name).toBe("InvalidTokenException");
+  });
+});
+
+describe("Error Model", () => {
+  it("return path, timestamp, message, validationErrors in response when validation failure", async () => {
+    const response = await postValidUser({ ...validUser, username: null });
+    expect(Object.keys(response.body)).toEqual(
+      expect.arrayContaining([
+        "path",
+        "timestamp",
+        "message",
+        "validationErrors",
+      ])
+    );
   });
 });

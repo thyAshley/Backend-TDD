@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 import { sendAccountActivation } from "../email/EmailService";
 import User from "../model/User";
-import { activateUserByToken } from "../utils/userUtils";
+import { activateUserByToken, getUsers } from "../utils/userUtils";
 
 interface IDictionary {
   [key: string]: string;
@@ -22,7 +22,12 @@ export const registerUser = async (req: Request, res: Response) => {
     errors
       .array()
       .forEach((error) => (validationErrors[error.param] = error.msg));
-    return res.status(400).json({ validationErrors: validationErrors });
+    return res.status(400).json({
+      validationErrors: validationErrors,
+      message: "Validation Failure",
+      path: req.originalUrl,
+      timestamp: "",
+    });
   }
   const { username, email, password } = req.body;
 
@@ -56,4 +61,9 @@ export const activateUserAccount = async (
     res.status(400);
     next(error);
   }
+};
+
+export const getAllUsers = async (req: Request, res: Response) => {
+  const users = await getUsers();
+  res.status(200).send(users);
 };

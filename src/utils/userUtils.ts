@@ -1,9 +1,9 @@
 import User from "../model/User";
-import { InvalidTokenException } from "../utils/errorUtils";
+import { InvalidTokenException, EmailException } from "../utils/errorUtils";
 
 export const findByEmail = async (email: string) => {
   const user = await User.findOne({ where: { email } });
-  if (user) throw new Error("E-mail already exist");
+  if (user) throw new EmailException();
 };
 
 export const activateUserByToken = async (token: string) => {
@@ -14,4 +14,14 @@ export const activateUserByToken = async (token: string) => {
   user.active = true;
   user.activationToken = null;
   await user.save();
+};
+
+export const getUsers = async () => {
+  const users = await User.findAll({ where: { active: true }, limit: 10 });
+  return {
+    content: users,
+    page: 0,
+    size: 10,
+    totalPages: 0,
+  };
 };

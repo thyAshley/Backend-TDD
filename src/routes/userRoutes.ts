@@ -5,10 +5,12 @@ import { findByEmail } from "../utils/userUtils";
 import {
   registerUser,
   activateUserAccount,
+  getAllUsers,
 } from "../controllers/userController";
 
 const route = express.Router();
 
+route.get("/", getAllUsers);
 route.post(
   "/",
   check("username")
