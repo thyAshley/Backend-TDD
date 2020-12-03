@@ -17,6 +17,10 @@ export const activateUserByToken = async (token: string) => {
 };
 
 export const getUsers = async (page: number, pageSize: number) => {
+  if (page < 0) page = 0;
+
+  if (pageSize > 10 || pageSize < 0) pageSize = 10;
+
   const usersWithCount = await User.findAndCountAll({
     where: { active: true },
     limit: pageSize,

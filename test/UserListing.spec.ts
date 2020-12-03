@@ -31,6 +31,7 @@ describe("Listing Users", () => {
   it("returns 200 ok when there are no user in database", async () => {
     const response = await getUsers();
     expect(response.status).toBe(200);
+    console.log(response);
   });
   it("returns page object as response body", async () => {
     const response = await getUsers();
@@ -92,5 +93,12 @@ describe("Listing Users", () => {
     const response = await getUsers().query({ size: -1 });
     expect(response.body.content).toHaveLength(10);
     expect(response.body.size).toBe(10);
+  });
+  it("return page as zero and size as 10 when invalid params are given", async () => {
+    await createUsers(11);
+    const response = await getUsers().query({ size: "size", page: "page" });
+    expect(response.body.content).toHaveLength(10);
+    expect(response.body.size).toBe(10);
+    expect(response.body.page).toBe(0);
   });
 });
