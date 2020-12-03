@@ -64,6 +64,7 @@ export const activateUserAccount = async (
 };
 
 export const getAllUsers = async (req: Request, res: Response) => {
-  const users = await getUsers();
+  const page = req.query.page || 0;
+  const users = await getUsers(+page);
   res.status(200).send(users);
 };

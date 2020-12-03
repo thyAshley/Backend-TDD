@@ -5,7 +5,7 @@ import { sequelize } from "../src/db/database";
 import app from "../src/app";
 
 const getUsers = () => {
-  return request(app).get("/api/v1/users");
+  return request(app).get(`/api/v1/users`);
 };
 
 const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
@@ -41,14 +41,32 @@ describe("Listing Users", () => {
       totalPages: 0,
     });
   });
-  it("return 10 users in page content when there are 11 user in database", async () => {
+  it("return 10 users in page content when there are 11 active user in database", async () => {
     await createUsers(11, 0);
-    const response = await request(app).get("/api/v1/users");
+    const response = await getUsers();
     expect(response.body.content).toHaveLength(10);
   });
   it("return 6 users in content when there are 6 active user and 5 inactive users", async () => {
     await createUsers(6, 5);
-    const response = await request(app).get("/api/v1/users");
+    const response = await getUsers();
     expect(response.body.content).toHaveLength(6);
+  });
+  it("return only id, username and email in content array", async () => {
+    await createUsers(1);
+    const response = await getUsers();
+    expect(Object.keys(response.body.content[0])).toEqual(
+      expect.arrayContaining(["id", "username", "email"])
+    );
+  });
+  it("return 2 totalPage when 10 < active user < 20", async () => {
+    await createUsers(16, 6);
+    const response = await getUsers();
+    expect(response.body.totalPages).toBe(2);
+  });
+
+  it("returns second page and page indicator when page is set as 1", async () => {
+    await createUsers(11);
+    const response = await getUsers().query({ page: 1 });
+    expect(response.body.content[0].username).toBe("user11");
   });
 });
