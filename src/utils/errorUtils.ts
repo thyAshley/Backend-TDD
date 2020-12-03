@@ -13,3 +13,11 @@ export class EmailException extends Error {
     this.name = "EmailException";
   }
 }
+export class UnexpectedException extends Error {
+  constructor() {
+    super();
+    this.message =
+      "Unexpected Error Occur, Please try again or inform the administrators.";
+    this.name = "UnexpectedException";
+  }
+}

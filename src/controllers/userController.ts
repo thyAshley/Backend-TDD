@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { sendAccountActivation } from "../email/EmailService";
 import User from "../model/User";
 import { activateUserByToken, getUsers } from "../utils/userUtils";
+import { UnexpectedException } from "../utils/errorUtils";
 
 interface IDictionary {
   [key: string]: string;
@@ -63,8 +64,23 @@ export const activateUserAccount = async (
   }
 };
 
-export const getAllUsers = async (req: Request, res: Response) => {
-  const page = req.query.page || 0;
-  const users = await getUsers(+page);
-  res.status(200).send(users);
+export const getAllUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const page = Number(req.query.page)
+    ? Number(req.query.page) >= 0
+      ? req.query.page
+      : 0
+    : 0;
+  let size = Number(req.query.size);
+  if (0 <= size == size >= 10) size = 10;
+  try {
+    const users = await getUsers(+page, +size);
+    res.status(200).send(users);
+  } catch (error) {
+    res.status(500);
+    next(new UnexpectedException());
+  }
 };

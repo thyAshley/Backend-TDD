@@ -68,5 +68,29 @@ describe("Listing Users", () => {
     await createUsers(11);
     const response = await getUsers().query({ page: 1 });
     expect(response.body.content[0].username).toBe("user11");
+    expect(response.body.page).toBe(1);
+  });
+  it("returns first page when page is set below zero", async () => {
+    await createUsers(11);
+    const response = await getUsers().query({ page: -5 });
+    expect(response.body.page).toBe(0);
+  });
+  it("return 5 users when size is set to 5", async () => {
+    await createUsers(11);
+    const response = await getUsers().query({ size: 5 });
+    expect(response.body.content).toHaveLength(5);
+    expect(response.body.size).toBe(5);
+  });
+  it("return 10 users and size indicator when size is set to 100", async () => {
+    await createUsers(11);
+    const response = await getUsers().query({ size: 100 });
+    expect(response.body.content).toHaveLength(10);
+    expect(response.body.size).toBe(10);
+  });
+  it("return 10 users and size indicator when size is set to negative", async () => {
+    await createUsers(11);
+    const response = await getUsers().query({ size: -1 });
+    expect(response.body.content).toHaveLength(10);
+    expect(response.body.size).toBe(10);
   });
 });
