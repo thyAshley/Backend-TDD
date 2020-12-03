@@ -69,11 +69,9 @@ export const getAllUsers = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { page, size } = req.query;
-  const offset = Number(page) || 0;
-  const userSize = Number(size) || 10;
+  const { page, size } = req.paginations;
   try {
-    const users = await getUsers(offset, userSize);
+    const users = await getUsers(page, size);
     res.status(200).send(users);
   } catch (error) {
     res.status(500);

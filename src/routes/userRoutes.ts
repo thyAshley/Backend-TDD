@@ -7,10 +7,11 @@ import {
   activateUserAccount,
   getAllUsers,
 } from "../controllers/userController";
+import { pagination } from "../middleware/paginationMiddleware";
 
 const route = express.Router();
 
-route.get("/", getAllUsers);
+route.get("/", pagination, getAllUsers);
 route.post(
   "/",
   check("username")
