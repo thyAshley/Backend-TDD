@@ -9,12 +9,13 @@ import {
   getUser,
   updateUser,
 } from "../controllers/userController";
+import { basicAuthentication } from "../middleware/basicAuthentication";
 import { pagination } from "../middleware/paginationMiddleware";
 
 const route = express.Router();
 
 route.get("/:id", getUser);
-route.put("/:id", updateUser);
+route.put("/:id", basicAuthentication, updateUser);
 
 route
   .route("/")

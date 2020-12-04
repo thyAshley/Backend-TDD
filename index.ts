@@ -1,3 +1,5 @@
+import bcrypt from "bcryptjs";
+
 import app from "./src/app";
 import User from "./src/model/User";
 import { sequelize } from "./src/db/database";
@@ -6,8 +8,8 @@ const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
   for (let i = 0; i < activeCount + inactiveCount; i++) {
     await User.create({
       username: `user${i + 1}`,
-      email: `user${i + 1}@mail.com`,
-      password: "Qweasd123",
+      email: `user${i + 1}@test.com`,
+      password: await bcrypt.hash("Qweasd123", 10),
       active: i < activeCount,
     });
   }

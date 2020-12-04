@@ -111,11 +111,14 @@ describe("When valid auth and active users send an update request", () => {
   afterAll(async () => {
     User.destroy({ truncate: true });
   });
-  it("returns status code 200", async () => {
+  it("returns status code 200", () => {
     expect(response.status).toBe(200);
   });
   it("update username to new user", async () => {
     const updatedUser = await User.findOne({ where: { id: user.id } });
     expect(updatedUser.username).toBe(update.username);
+  });
+  it("return succesful update message", () => {
+    expect(response.body.message).toContain("successful");
   });
 });
