@@ -46,3 +46,12 @@ export const findUserById = async (id: string) => {
   if (!user) throw new UserNotFoundException();
   return user;
 };
+
+export const updateUserById = async (
+  id: string,
+  fields: { username: string }
+) => {
+  const user = await User.findOne({ where: { id: id } });
+  user.username = fields.username || user.username;
+  await user.save();
+};

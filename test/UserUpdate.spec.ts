@@ -1,5 +1,5 @@
 import request from "supertest";
-
+import bcrypt from "bcryptjs";
 import User from "../src/model/User";
 import { sequelize } from "../src/db/database";
 import app from "../src/app";
@@ -7,24 +7,30 @@ import app from "../src/app";
 const validUser = {
   username: "user1",
   email: "user1@test.com",
-  password: "P4ssword",
   active: true,
 };
 
+const createUser = async (user = validUser) => {
+  return await User.create({
+    ...user,
+    password: await bcrypt.hash("P4ssword", 10),
+  });
+};
 beforeAll(async () => {
   await sequelize.sync();
 });
 
 const updateUser = async (
   id: string | number = 5,
-  options?: { auth: { email: string; password: string } }
+  options?: { auth: { email: string; password: string } },
+  body?: {}
 ) => {
   const agent = request(app).put(`/api/v1/users/${id}`);
   if (options?.auth) {
     const { email, password } = options.auth;
     agent.auth(email, password);
   }
-  return agent.send();
+  return agent.send(body);
 };
 
 describe("When updating user without authorization", () => {
@@ -45,27 +51,28 @@ describe("When updating user without authorization", () => {
   });
 });
 
-describe("invalid login auth", () => {
+describe("When invalid auth and inactive users sends an update request", () => {
+  let user: User;
   beforeAll(async () => {
-    await User.create({ ...validUser });
+    user = await createUser();
   });
   afterAll(async () => {
     User.destroy({ truncate: true });
   });
   it("return status code 403 forbidden when email is invalid", async () => {
-    const response = await updateUser(5, {
+    const response = await updateUser(user.id, {
       auth: { email: "user1000@test.com", password: "P4ssword" },
     });
     expect(response.status).toBe(403);
   });
   it("return status code 403 forbidden when password is invalid", async () => {
-    const response = await updateUser(5, {
-      auth: { email: "user1@test.com", password: "P24ssword" },
+    const response = await updateUser(user.id, {
+      auth: { email: "user1@test.com", password: "invalid" },
     });
     expect(response.status).toBe(403);
   });
   it("return status code 403 when credential is correct but for wrong user", async () => {
-    const userToBeUpdated = await User.create({
+    const userToBeUpdated = await createUser({
       ...validUser,
       email: "user2@test.com",
       username: "user2",
@@ -76,7 +83,7 @@ describe("invalid login auth", () => {
     expect(response.status).toBe(403);
   });
   it("return status code 403 when credential is correct but for inactive user", async () => {
-    const userToBeUpdated = await User.create({
+    const userToBeUpdated = await createUser({
       ...validUser,
       email: "user3@test.com",
       username: "user3",
@@ -86,5 +93,29 @@ describe("invalid login auth", () => {
       auth: { email: "user1@test.com", password: "P4ssword" },
     });
     expect(response.status).toBe(403);
+  });
+});
+
+describe("When valid auth and active users send an update request", () => {
+  let update = { username: "user1-update" };
+  let user: User;
+  let response: request.Response;
+  beforeAll(async () => {
+    user = await createUser();
+    response = await updateUser(
+      user.id,
+      { auth: { email: validUser.email, password: "P4ssword" } },
+      update
+    );
+  });
+  afterAll(async () => {
+    User.destroy({ truncate: true });
+  });
+  it("returns status code 200", async () => {
+    expect(response.status).toBe(200);
+  });
+  it("update username to new user", async () => {
+    const updatedUser = await User.findOne({ where: { id: user.id } });
+    expect(updatedUser.username).toBe(update.username);
   });
 });

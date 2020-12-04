@@ -9,6 +9,7 @@ import {
   activateUserByToken,
   getUsers,
   findUserById,
+  updateUserById,
 } from "../utils/userUtils";
 import {
   ForbiddenException,
@@ -104,5 +105,31 @@ export const updateUser = async (
   res: Response,
   next: NextFunction
 ) => {
+  const authorization = req.headers.authorization;
+  if (authorization) {
+    const encoded = authorization.split(" ")[1];
+    const decoded = Buffer.from(encoded, "base64").toString("ascii");
+    const [email, password] = decoded.split(":");
+    try {
+      const user = await User.findOne({ where: { email } });
+      if (!user || !user.active)
+        return next(
+          new ForbiddenException("You are not authorize to update the user")
+        );
+      if (user.id.toString() !== req.params.id.toString())
+        return next(
+          new ForbiddenException("You are not authorize to update the user")
+        );
+
+      const match = await bcrypt.compare(password, user.password);
+
+      if (!match)
+        return next(
+          new ForbiddenException("You are not authorize to update the user")
+        );
+      await updateUserById(req.params.id, req.body);
+      res.status(200).send();
+    } catch (error) {}
+  }
   next(new ForbiddenException("You are not authorize to update the user"));
 };
