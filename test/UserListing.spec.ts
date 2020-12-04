@@ -2,21 +2,11 @@ import request from "supertest";
 
 import User from "../src/model/User";
 import { sequelize } from "../src/db/database";
+import { createUsers } from "../src/utils/testUtils";
 import app from "../src/app";
 
 const getUsers = () => {
   return request(app).get(`/api/v1/users`);
-};
-
-const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
-  for (let i = 0; i < activeCount + inactiveCount; i++) {
-    User.create({
-      username: `user${i + 1}`,
-      email: `user${i + 1}@mail.com`,
-      password: "Qweasd123",
-      active: i < activeCount,
-    });
-  }
 };
 
 describe("Listing Users", () => {
@@ -25,7 +15,7 @@ describe("Listing Users", () => {
   });
 
   afterEach(async () => {
-    return await User.destroy({ truncate: true });
+    await User.destroy({ truncate: true });
   });
 
   it("returns 200 ok when there are no user in database", async () => {

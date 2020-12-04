@@ -97,3 +97,11 @@ export const getUser = async (
     next(new UserNotFoundException());
   }
 };
+
+export const updateUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  return res.status(403).send();
+};

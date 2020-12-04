@@ -7,12 +7,14 @@ import {
   activateUserAccount,
   getAllUsers,
   getUser,
+  updateUser,
 } from "../controllers/userController";
 import { pagination } from "../middleware/paginationMiddleware";
 
 const route = express.Router();
 
 route.get("/:id", getUser);
+route.put("/:id", updateUser);
 
 route
   .route("/")

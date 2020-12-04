@@ -47,7 +47,7 @@ const postValidUser = (user = validUser) => {
 describe("User Registration Route", () => {
   beforeAll(async () => {
     await server.listen(8587, "localhost");
-    return sequelize.sync();
+    await sequelize.sync();
   });
 
   afterAll(async () => {
