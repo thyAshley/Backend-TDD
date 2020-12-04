@@ -4,6 +4,7 @@ import { sequelize } from "../db/database";
 const UserModel = Model;
 
 class User extends UserModel implements IUser {
+  readonly id?: string;
   username: string;
   password: string;
   email: string;
@@ -12,6 +13,7 @@ class User extends UserModel implements IUser {
 }
 
 interface IUser extends Model {
+  readonly id?: string;
   username: string;
   email: string;
   password: string;

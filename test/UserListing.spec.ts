@@ -102,3 +102,68 @@ describe("Listing Users", () => {
     expect(response.body.page).toBe(0);
   });
 });
+
+const getUser = (id: string = "5") => {
+  return request(app).get(`/api/v1/users/${id}`);
+};
+
+describe("When Invalid user is requested", () => {
+  let response: any;
+  beforeEach(async () => {
+    response = await getUser("5");
+  });
+  it("should return status 404", async () => {
+    expect(response.status).toBe(404);
+  });
+  it("should return message: 'User not found' ", async () => {
+    expect(response.body.message).toBe("User not found");
+  });
+  it("should return message: 'User not found' ", async () => {
+    expect(Object.keys(response.body)).toEqual(
+      expect.arrayContaining(["message", "name"])
+    );
+  });
+});
+
+describe("When valid active user is requested", () => {
+  let response: any;
+  beforeAll(async () => {
+    const user = await User.create({
+      username: "validuser",
+      email: "validuser@email.com",
+      active: true,
+    });
+    response = await getUser(user.id);
+  });
+  afterAll(async () => {
+    return await User.destroy({ truncate: true });
+  });
+
+  it("should return status 200", async () => {
+    expect(response.status).toBe(200);
+  });
+  it("should return username, email and id of user", async () => {
+    expect(Object.keys(response.body)).toEqual(
+      expect.arrayContaining(["username", "email", "id"])
+    );
+  });
+});
+
+describe("When valid inactive user is requested", () => {
+  let response: any;
+  beforeAll(async () => {
+    const user = await User.create({
+      username: "validuser",
+      email: "validuser@email.com",
+      active: false,
+    });
+    response = await getUser(user.id);
+  });
+  afterAll(async () => {
+    return await User.destroy({ truncate: true });
+  });
+
+  it("should return status 404", async () => {
+    expect(response.status).toBe(404);
+  });
+});

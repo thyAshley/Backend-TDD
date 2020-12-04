@@ -1,5 +1,9 @@
 import User from "../model/User";
-import { InvalidTokenException, EmailException } from "../utils/errorUtils";
+import {
+  InvalidTokenException,
+  EmailException,
+  UserNotFoundException,
+} from "../utils/errorUtils";
 
 export const findByEmail = async (email: string) => {
   const user = await User.findOne({ where: { email } });
@@ -32,4 +36,13 @@ export const getUsers = async (page: number, pageSize: number) => {
     size: pageSize,
     totalPages: Math.ceil(usersWithCount.count / pageSize),
   };
+};
+
+export const findUserById = async (id: string) => {
+  const user = await User.findOne({
+    where: { id: id, active: true },
+    attributes: ["id", "username", "email"],
+  });
+  if (!user) throw new UserNotFoundException();
+  return user;
 };

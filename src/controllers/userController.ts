@@ -5,8 +5,15 @@ import crypto from "crypto";
 
 import { sendAccountActivation } from "../email/EmailService";
 import User from "../model/User";
-import { activateUserByToken, getUsers } from "../utils/userUtils";
-import { UnexpectedException } from "../utils/errorUtils";
+import {
+  activateUserByToken,
+  getUsers,
+  findUserById,
+} from "../utils/userUtils";
+import {
+  UnexpectedException,
+  UserNotFoundException,
+} from "../utils/errorUtils";
 
 interface IDictionary {
   [key: string]: string;
@@ -76,5 +83,20 @@ export const getAllUsers = async (
   } catch (error) {
     res.status(500);
     next(new UnexpectedException());
+  }
+};
+
+export const getUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = req.params.id;
+    const user = await findUserById(id);
+    res.status(200).send(user);
+  } catch (error) {
+    res.status(404);
+    next(new UserNotFoundException());
   }
 };
