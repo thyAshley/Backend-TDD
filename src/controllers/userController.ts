@@ -11,6 +11,7 @@ import {
   findUserById,
 } from "../utils/userUtils";
 import {
+  ForbiddenException,
   UnexpectedException,
   UserNotFoundException,
 } from "../utils/errorUtils";
@@ -103,5 +104,5 @@ export const updateUser = async (
   res: Response,
   next: NextFunction
 ) => {
-  return res.status(403).send();
+  next(new ForbiddenException("You are not authorize to update the user"));
 };

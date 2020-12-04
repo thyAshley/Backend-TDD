@@ -42,10 +42,9 @@ export class AuthenticationException extends Error {
 }
 
 export class ForbiddenException extends Error {
-  constructor() {
-    super();
+  constructor(message: string = "You are not authorize to update the user") {
+    super(message);
     this.status = 403;
-    this.message = "You are unauthorize to perform this action";
     this.name = "ForbiddenException";
   }
 }
