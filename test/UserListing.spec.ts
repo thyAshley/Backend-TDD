@@ -31,7 +31,6 @@ describe("Listing Users", () => {
   it("returns 200 ok when there are no user in database", async () => {
     const response = await getUsers();
     expect(response.status).toBe(200);
-    console.log(response);
   });
   it("returns page object as response body", async () => {
     const response = await getUsers();

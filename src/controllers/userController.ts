@@ -66,7 +66,6 @@ export const activateUserAccount = async (
     await activateUserByToken(activationToken);
     return res.send({ message: "Account has been activated" });
   } catch (error) {
-    res.status(400);
     next(error);
   }
 };
@@ -81,7 +80,6 @@ export const getAllUsers = async (
     const users = await getUsers(page, size);
     res.status(200).send(users);
   } catch (error) {
-    res.status(500);
     next(new UnexpectedException());
   }
 };
@@ -96,7 +94,6 @@ export const getUser = async (
     const user = await findUserById(id);
     res.status(200).send(user);
   } catch (error) {
-    res.status(404);
     next(new UserNotFoundException());
   }
 };
