@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import { validationResult } from "express-validator";
 
 import {
   AuthenticationException,
@@ -13,6 +14,11 @@ export const login = async (
   next: NextFunction
 ) => {
   const { email, password } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(new AuthenticationException());
+  }
+
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {

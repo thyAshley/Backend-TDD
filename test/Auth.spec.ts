@@ -62,7 +62,7 @@ describe("When credentials given is correct", () => {
   });
 });
 
-describe("When user does not exist in database", () => {
+describe("When input error or user does not exist in database", () => {
   let response: request.Response;
   beforeAll(async () => {
     response = await postAuthentication();
@@ -73,6 +73,20 @@ describe("When user does not exist in database", () => {
   it("returns AuthenticationError", () => {
     expect(response.body.name).toBe("AuthenticationException");
     expect(response.body.message).toBe("Invalid account details provided");
+  });
+  it("return 401 when e-mail is not valid", async () => {
+    response = await postAuthentication({
+      email: "invalidformat",
+      password: inactiveUser.password,
+    });
+    expect(response.status).toBe(401);
+  });
+  it("return 401 when password is not valid", async () => {
+    response = await postAuthentication({
+      email: inactiveUser.email,
+      password: null,
+    });
+    expect(response.status).toBe(401);
   });
 });
 describe("When user does not exist in database", () => {
