@@ -32,7 +32,7 @@ export const getUsers = async (
   if (authenticatedUser) {
     uid = authenticatedUser.id;
   }
-  console.log(authenticatedUser);
+
   const usersWithCount = await User.findAndCountAll({
     where: {
       active: true,
@@ -42,7 +42,6 @@ export const getUsers = async (
     offset: page * pageSize,
     attributes: ["id", "username", "email"],
   });
-  console.log(usersWithCount);
   return {
     content: usersWithCount.rows,
     page: page,

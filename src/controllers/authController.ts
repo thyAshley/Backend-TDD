@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 
 import {
@@ -24,18 +25,27 @@ export const login = async (
     if (!user) {
       return next(new AuthenticationException());
     }
-
+    if (user.active === false) {
+      return next(new ForbiddenException());
+    }
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return next(new AuthenticationException());
     }
-    if (user.active === false) {
-      return next(new ForbiddenException());
-    }
+    const token = jwt.sign(
+      {
+        id: user.id,
+        active: user.active,
+        email: user.email,
+        username: user.username,
+      },
+      "temporarysecretkeytobereplacedwith .env"
+    );
     return res.status(200).json({
       id: user.id,
       username: user.username,
+      token,
     });
   } catch (error) {
     res.status(400).send("error");

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import User from "../src/model/User";
 import { sequelize } from "../src/db/database";
 import app from "../src/app";
+import { activateUserAccount } from "../src/controllers/userController";
 
 beforeAll(async () => {
   await sequelize.sync();
@@ -57,7 +58,7 @@ describe("When credentials given is correct", () => {
     expect(response.body.username).toBe(validUser.username);
     expect(response.body.id).toBeTruthy();
     expect(Object.keys(response.body)).toEqual(
-      expect.arrayContaining(["id", "username"])
+      expect.arrayContaining(["id", "username", "token"])
     );
   });
 });
@@ -136,5 +137,19 @@ describe("when logging in with an inactive account", () => {
     expect(Object.keys(response.body)).toEqual(
       expect.arrayContaining(["path", "timestamp", "message"])
     );
+  });
+});
+
+describe("when credentials are correct", async () => {
+  let response: request.Response;
+  beforeAll(async () => {
+    await createUser(validUser);
+    response = await postAuthentication();
+  });
+  afterAll(async () => {
+    User.destroy({ truncate: true });
+  });
+  it("returns jwt token", () => {
+    expect(response.body.token).not.toBeUndefined();
   });
 });
