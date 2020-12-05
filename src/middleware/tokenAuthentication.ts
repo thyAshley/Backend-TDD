@@ -9,8 +9,12 @@ export const tokenAuthentication = async (
   const authorization = req.headers.authorization;
   if (authorization) {
     const token = authorization.split(" ")[1];
-    const user = await TokenService.verifyToken(token);
-    req.authorization = user;
+    try {
+      const user = await TokenService.verifyToken(token);
+      req.authorization = user;
+    } catch (error) {
+      res.status(403);
+    }
   }
   next();
 };

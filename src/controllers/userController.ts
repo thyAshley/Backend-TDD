@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 
 import { sendAccountActivation } from "../email/EmailService";
 import User from "../model/User";
@@ -10,6 +9,7 @@ import {
   getUsers,
   findUserById,
   updateUserById,
+  generateToken,
 } from "../utils/userUtils";
 import {
   ForbiddenException,
@@ -20,10 +20,6 @@ import {
 interface IDictionary {
   [key: string]: string;
 }
-
-const generateToken = () => {
-  return crypto.randomBytes(16).toString("hex").substring(0, 16);
-};
 
 export const registerUser = async (req: Request, res: Response) => {
   const errors = validationResult(req);

@@ -34,7 +34,7 @@ export const login = async (
     if (!match) {
       return next(new AuthenticationException());
     }
-    const token = TokenService.createToken(user);
+    const token = await TokenService.createToken(user);
 
     return res.status(200).json({
       id: user.id,

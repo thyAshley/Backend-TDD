@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 import User from "../model/User";
 import {
   InvalidTokenException,
@@ -5,6 +7,7 @@ import {
   UserNotFoundException,
 } from "../utils/errorUtils";
 import Sequelize from "sequelize";
+import { randomString } from "./generator";
 
 export const findByEmail = async (email: string) => {
   const user = await User.findOne({ where: { email } });
@@ -66,4 +69,8 @@ export const updateUserById = async (
   const user = await User.findOne({ where: { id: id } });
   user.username = fields.username || user.username;
   await user.save();
+};
+
+export const generateToken = () => {
+  return randomString(16);
 };

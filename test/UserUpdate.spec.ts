@@ -22,7 +22,7 @@ beforeAll(async () => {
 
 const updateUser = async (
   id: string | number = 5,
-  options?: { auth: { email: string; password: string } },
+  options?: { auth: { email?: string; password?: string; token?: string } },
   body?: {}
 ) => {
   let tokenAgent = request(app).post("/api/v1/auth");
@@ -34,6 +34,9 @@ const updateUser = async (
   }
   if (token) {
     updateAgent.set("Authorization", `Bearer ${token}`);
+  }
+  if (options?.auth?.token) {
+    updateAgent.set("Authorization", `Bearer ${options.auth.token}`);
   }
 
   return updateAgent.send(body);
@@ -126,5 +129,9 @@ describe("When valid auth and active users send an update request", () => {
   });
   it("return succesful update message", () => {
     expect(response.body.message).toContain("successful");
+  });
+  it("returns 403 when invalid token is sent", async () => {
+    const response = await updateUser(5, { auth: { token: "token" } }, null);
+    expect(response.status).toBe(403);
   });
 });
