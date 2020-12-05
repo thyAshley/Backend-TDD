@@ -4,6 +4,7 @@ import {
   EmailException,
   UserNotFoundException,
 } from "../utils/errorUtils";
+import Sequelize from "sequelize";
 
 export const findByEmail = async (email: string) => {
   const user = await User.findOne({ where: { email } });
@@ -20,16 +21,28 @@ export const activateUserByToken = async (token: string) => {
   await user.save();
 };
 
-export const getUsers = async (page: number, pageSize: number) => {
+export const getUsers = async (
+  page: number,
+  pageSize: number,
+  authenticatedUser: User
+) => {
   if (typeof page !== "number") page = parseInt(page);
   if (typeof pageSize !== "number") pageSize = parseInt(pageSize);
-
+  let uid = "0";
+  if (authenticatedUser) {
+    uid = authenticatedUser.id;
+  }
+  console.log(authenticatedUser);
   const usersWithCount = await User.findAndCountAll({
-    where: { active: true },
+    where: {
+      active: true,
+      id: { [Sequelize.Op.not]: uid },
+    },
     limit: pageSize,
     offset: page * pageSize,
     attributes: ["id", "username", "email"],
   });
+  console.log(usersWithCount);
   return {
     content: usersWithCount.rows,
     page: page,

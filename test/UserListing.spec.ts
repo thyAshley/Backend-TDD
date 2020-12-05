@@ -5,8 +5,13 @@ import { sequelize } from "../src/db/database";
 import { createUsers } from "../src/utils/testUtils";
 import app from "../src/app";
 
-const getUsers = () => {
-  return request(app).get(`/api/v1/users`);
+const getUsers = (options?: { auth: { email: string; password: string } }) => {
+  const agent = request(app).get(`/api/v1/users`);
+  if (options && options.auth) {
+    const { email, password } = options.auth;
+    agent.auth(email, password);
+  }
+  return agent;
 };
 
 describe("Listing Users", () => {
@@ -89,6 +94,13 @@ describe("Listing Users", () => {
     expect(response.body.content).toHaveLength(10);
     expect(response.body.size).toBe(10);
     expect(response.body.page).toBe(0);
+  });
+  it("return user page without logged in user when request has valid authorization", async () => {
+    await createUsers(11);
+    const response = await getUsers({
+      auth: { email: "user1@mail.com", password: "P4ssword" },
+    });
+    expect(response.body.totalPages).toBe(1);
   });
 });
 

@@ -19,7 +19,7 @@ route.put("/:id", basicAuthentication, updateUser);
 
 route
   .route("/")
-  .get(pagination, getAllUsers)
+  .get(pagination, basicAuthentication, getAllUsers)
   .post(
     check("username")
       .notEmpty()

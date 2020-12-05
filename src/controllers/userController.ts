@@ -77,9 +77,10 @@ export const getAllUsers = async (
   res: Response,
   next: NextFunction
 ) => {
+  const authenticatedUser = req.authorization;
   const { page, size } = req.paginations;
   try {
-    const users = await getUsers(page, size);
+    const users = await getUsers(page, size, authenticatedUser);
     res.status(200).send(users);
   } catch (error) {
     next(new UnexpectedException());
