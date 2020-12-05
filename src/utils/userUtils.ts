@@ -71,6 +71,10 @@ export const updateUserById = async (
   await user.save();
 };
 
+export const deleteUserById = async (id: string) => {
+  await User.destroy({ where: { id: id } });
+};
+
 export const generateToken = () => {
   return randomString(16);
 };

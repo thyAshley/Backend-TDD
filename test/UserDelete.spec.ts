@@ -98,3 +98,23 @@ describe("when deleting user with invalid token", async () => {
     expect(response.body.name).toBe("AuthenticationException");
   });
 });
+
+describe("when deleting user with valid token and valid user", async () => {
+  let requestUser: User;
+  let response: request.Response;
+  beforeAll(async () => {
+    requestUser = await addUser();
+    const authResponse = await auth();
+    response = await deleteUser(requestUser.id, authResponse.body.token);
+  });
+  afterAll(async () => {
+    await User.destroy({ truncate: true });
+  });
+  it("returns unauthorize 401", async () => {
+    expect(response.status).toBe(200);
+  });
+  it("remove user from database", async () => {
+    const dbUser = await User.findOne({ where: { id: requestUser.id } });
+    expect(dbUser).toBe(null);
+  });
+});

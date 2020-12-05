@@ -10,6 +10,7 @@ import {
   findUserById,
   updateUserById,
   generateToken,
+  deleteUserById,
 } from "../utils/userUtils";
 import {
   AuthenticationException,
@@ -128,7 +129,13 @@ export const deleteUser = async (
   if (!user) {
     return next(new AuthenticationException());
   }
-  if (user.id !== req.params.id) {
+  if (user.id.toString() !== req.params.id.toString()) {
     return next(new ForbiddenException());
+  }
+  try {
+    await deleteUserById(user.id);
+    res.send();
+  } catch (error) {
+    next(new UnexpectedException());
   }
 };
