@@ -14,6 +14,10 @@ export const verifyToken = async (token: string) => {
   return { id: userId };
 };
 
+export const deleteToken = async (token: string) => {
+  await Token.destroy({ where: { token: token } });
+};
+
 // import jwt from "jsonwebtoken";
 //JWT
 // const secretKey = "temporarysecretkeytobereplacedwith .env";

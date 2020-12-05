@@ -12,6 +12,7 @@ import {
   generateToken,
 } from "../utils/userUtils";
 import {
+  AuthenticationException,
   ForbiddenException,
   UnexpectedException,
   UserNotFoundException,
@@ -115,5 +116,19 @@ export const updateUser = async (
     });
   } catch (error) {
     next(new UnexpectedException());
+  }
+};
+
+export const deleteUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.authorization;
+  if (!user) {
+    return next(new AuthenticationException());
+  }
+  if (user.id !== req.params.id) {
+    return next(new ForbiddenException());
   }
 };

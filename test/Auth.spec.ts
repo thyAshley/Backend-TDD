@@ -2,9 +2,9 @@ import request from "supertest";
 import bcrypt from "bcryptjs";
 
 import User from "../src/model/User";
+import Token from "../src/model/Token";
 import { sequelize } from "../src/db/database";
 import app from "../src/app";
-import { activateUserAccount } from "../src/controllers/userController";
 
 beforeAll(async () => {
   await sequelize.sync();
@@ -23,6 +23,15 @@ const inactiveUser = {
   password: "P4ssword",
   active: false,
 };
+
+const postLogout = (token?: string) => {
+  const agent = request(app).post("/api/v1/auth/logout");
+  if (token) {
+    agent.set("Authorization", `Bearer ${token}`);
+  }
+  return agent;
+};
+
 const createUser = async (user = validUser) => {
   return await User.create({
     ...user,
@@ -151,5 +160,23 @@ describe("when credentials are correct", () => {
   });
   it("returns jwt token", () => {
     expect(response.body.token).not.toBeUndefined();
+  });
+});
+
+describe("Logged Out", () => {
+  it("returns 200 ok when unauthorized request send for logout", async () => {
+    const response = await postLogout();
+    expect(response.status).toBe(200);
+  });
+  it("removes the token from the database", async () => {
+    await createUser();
+    const response = await postAuthentication({
+      email: validUser.email,
+      password: validUser.password,
+    });
+    const token = response.body.token;
+    await postLogout(token);
+    const storedToken = await Token.findOne({ where: { token } });
+    expect(storedToken).toBeNull();
   });
 });

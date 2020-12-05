@@ -11,6 +11,7 @@ export const tokenAuthentication = async (
     const token = authorization.split(" ")[1];
     try {
       const user = await TokenService.verifyToken(token);
+
       req.authorization = user;
     } catch (error) {
       res.status(403);

@@ -45,3 +45,16 @@ export const login = async (
     res.status(400).send("error");
   }
 };
+
+export const logUserOut = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authorization = req.headers.authorization;
+  if (authorization) {
+    const token = authorization.split(" ")[1];
+    await TokenService.deleteToken(token);
+  }
+  res.send();
+};

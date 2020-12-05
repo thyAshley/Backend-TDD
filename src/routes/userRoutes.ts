@@ -8,16 +8,20 @@ import {
   getAllUsers,
   getUser,
   updateUser,
+  deleteUser,
 } from "../controllers/userController";
 import { pagination } from "../middleware/paginationMiddleware";
 import { tokenAuthentication } from "../middleware/tokenAuthentication";
 
-const route = express.Router();
+const router = express.Router();
 
-route.get("/:id", getUser);
-route.put("/:id", tokenAuthentication, updateUser);
+router
+  .route("/:id")
+  .get(getUser)
+  .put(tokenAuthentication, updateUser)
+  .delete(tokenAuthentication, deleteUser);
 
-route
+router
   .route("/")
   .get(pagination, tokenAuthentication, getAllUsers)
   .post(
@@ -47,6 +51,6 @@ route
     registerUser
   );
 
-route.post("/activation/:token", activateUserAccount);
+router.post("/activation/:token", activateUserAccount);
 
-export default route;
+export default router;
