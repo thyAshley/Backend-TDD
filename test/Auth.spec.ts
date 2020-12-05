@@ -140,7 +140,7 @@ describe("when logging in with an inactive account", () => {
   });
 });
 
-describe("when credentials are correct", async () => {
+describe("when credentials are correct", () => {
   let response: request.Response;
   beforeAll(async () => {
     await createUser(validUser);

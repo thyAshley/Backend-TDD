@@ -9,7 +9,7 @@ const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
     await User.create({
       username: `user${i + 1}`,
       email: `user${i + 1}@test.com`,
-      password: await bcrypt.hash("Qweasd123", 10),
+      password: await bcrypt.hash("P4ssword", 10),
       active: i < activeCount,
     });
   }

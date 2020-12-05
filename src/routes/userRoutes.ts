@@ -9,17 +9,17 @@ import {
   getUser,
   updateUser,
 } from "../controllers/userController";
-import { basicAuthentication } from "../middleware/basicAuthentication";
 import { pagination } from "../middleware/paginationMiddleware";
+import { tokenAuthentication } from "../middleware/tokenAuthentication";
 
 const route = express.Router();
 
 route.get("/:id", getUser);
-route.put("/:id", basicAuthentication, updateUser);
+route.put("/:id", tokenAuthentication, updateUser);
 
 route
   .route("/")
-  .get(pagination, basicAuthentication, getAllUsers)
+  .get(pagination, tokenAuthentication, getAllUsers)
   .post(
     check("username")
       .notEmpty()

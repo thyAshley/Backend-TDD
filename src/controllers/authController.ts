@@ -8,6 +8,7 @@ import {
   ForbiddenException,
 } from "../utils/errorUtils";
 import User from "../model/User";
+import * as TokenService from "../utils/TokenService";
 
 export const login = async (
   req: Request,
@@ -25,7 +26,7 @@ export const login = async (
     if (!user) {
       return next(new AuthenticationException());
     }
-    if (user.active === false) {
+    if (!user.active) {
       return next(new ForbiddenException());
     }
     const match = await bcrypt.compare(password, user.password);
@@ -33,15 +34,8 @@ export const login = async (
     if (!match) {
       return next(new AuthenticationException());
     }
-    const token = jwt.sign(
-      {
-        id: user.id,
-        active: user.active,
-        email: user.email,
-        username: user.username,
-      },
-      "temporarysecretkeytobereplacedwith .env"
-    );
+    const token = TokenService.createToken(user);
+
     return res.status(200).json({
       id: user.id,
       username: user.username,

@@ -25,12 +25,18 @@ const updateUser = async (
   options?: { auth: { email: string; password: string } },
   body?: {}
 ) => {
-  const agent = request(app).put(`/api/v1/users/${id}`);
-  if (options?.auth) {
-    const { email, password } = options.auth;
-    agent.auth(email, password);
+  let tokenAgent = request(app).post("/api/v1/auth");
+  let updateAgent = request(app).put(`/api/v1/users/${id}`);
+  let token;
+  if (options && options.auth) {
+    const response = await tokenAgent.send(options.auth);
+    token = response.body.token;
   }
-  return agent.send(body);
+  if (token) {
+    updateAgent.set("Authorization", `Bearer ${token}`);
+  }
+
+  return updateAgent.send(body);
 };
 
 describe("When updating user without authorization", () => {
