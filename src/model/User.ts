@@ -1,5 +1,7 @@
 import { Model, DataTypes } from "sequelize";
+
 import { sequelize } from "../db/database";
+import Token from "./Token";
 
 const UserModel = Model;
 
@@ -46,5 +48,10 @@ User.init(
     modelName: "user",
   }
 );
+
+User.hasMany(Token, {
+  onDelete: "cascade",
+  foreignKey: "userId",
+});
 
 export default User;

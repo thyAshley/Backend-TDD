@@ -16,9 +16,6 @@ Token.init(
     token: {
       type: DataTypes.STRING,
     },
-    userId: {
-      type: DataTypes.INTEGER,
-    },
   },
   {
     sequelize,

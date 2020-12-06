@@ -66,7 +66,7 @@ describe("When invalid auth and inactive users sends an update request", () => {
     user = await createUser();
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("return status code 403 forbidden when email is invalid", async () => {
     const response = await updateUser(user.id, {
@@ -118,7 +118,7 @@ describe("When valid auth and active users send an update request", () => {
     );
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("returns status code 200", () => {
     expect(response.status).toBe(200);

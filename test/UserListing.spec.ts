@@ -21,7 +21,7 @@ describe("Listing Users", () => {
   });
 
   afterEach(async () => {
-    await User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
 
   it("returns 200 ok when there are no user in database", async () => {
@@ -138,7 +138,7 @@ describe("When valid active user is requested", () => {
     response = await getUser(user.id);
   });
   afterAll(async () => {
-    return await User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
 
   it("should return status 200", async () => {
@@ -162,7 +162,7 @@ describe("When valid inactive user is requested", () => {
     response = await getUser(user.id);
   });
   afterAll(async () => {
-    return await User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
 
   it("should return status 404", async () => {

@@ -1,5 +1,3 @@
-import crypto from "crypto";
-
 import User from "../model/User";
 import {
   InvalidTokenException,

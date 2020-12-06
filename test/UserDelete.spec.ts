@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { sequelize } from "../src/db/database";
 import app from "../src/app";
 import User from "../src/model/User";
+import Token from "../src/model/Token";
 
 const validUser = {
   username: "user1",
@@ -45,7 +46,7 @@ describe("When deleting user without authorization", () => {
     response = await deleteUser(5);
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorized status 401", () => {
     expect(response.status).toBe(401);
@@ -58,12 +59,12 @@ describe("When deleting user without authorization", () => {
   });
 });
 
-describe("when deleting user with valid credentials but for wrong user", async () => {
+describe("when deleting user with valid credentials but for wrong user", () => {
   beforeAll(async () => {
     await addUser();
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorize", async () => {
     const toDeleteUser = await addUser({
@@ -81,13 +82,13 @@ describe("when deleting user with valid credentials but for wrong user", async (
   });
 });
 
-describe("when deleting user with invalid token", async () => {
+describe("when deleting user with invalid token", () => {
   let requestUser: User;
   beforeAll(async () => {
     requestUser = await addUser();
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorize 401", async () => {
     const response = await deleteUser(requestUser.id, "invalid");
@@ -99,16 +100,18 @@ describe("when deleting user with invalid token", async () => {
   });
 });
 
-describe("when deleting user with valid token and valid user", async () => {
+describe("when deleting user with valid token and valid user", () => {
   let requestUser: User;
   let response: request.Response;
+  let token;
   beforeAll(async () => {
     requestUser = await addUser();
     const authResponse = await auth();
-    response = await deleteUser(requestUser.id, authResponse.body.token);
+    token = authResponse.body.token;
+    response = await deleteUser(requestUser.id, token);
   });
   afterAll(async () => {
-    await User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorize 401", async () => {
     expect(response.status).toBe(200);
@@ -116,5 +119,20 @@ describe("when deleting user with valid token and valid user", async () => {
   it("remove user from database", async () => {
     const dbUser = await User.findOne({ where: { id: requestUser.id } });
     expect(dbUser).toBe(null);
+  });
+  it("delete token from database", async () => {
+    const dbToken = await Token.findOne({ where: { token: token } });
+    expect(dbToken).toBeNull();
+  });
+  it("delete all token from database", async () => {
+    requestUser = await addUser();
+    const tokenOne = await auth();
+    await auth();
+    let dbToken = await Token.findAll();
+    expect(dbToken).toHaveLength(2);
+
+    response = await deleteUser(requestUser.id, tokenOne.body.token);
+    dbToken = await Token.findAll();
+    expect(dbToken).toHaveLength(0);
   });
 });

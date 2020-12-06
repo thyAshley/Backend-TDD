@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 import { sendAccountActivation } from "../email/EmailService";
 import User from "../model/User";
+import * as TokenService from "../utils/TokenService";
 import {
   activateUserByToken,
   getUsers,

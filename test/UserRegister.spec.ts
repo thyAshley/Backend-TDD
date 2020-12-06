@@ -56,7 +56,7 @@ describe("User Registration Route", () => {
 
   beforeEach(() => {
     simulateSMTPFailure = false;
-    return User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
 
   it("should return 200 OK when signup request is valid", async () => {
@@ -229,7 +229,7 @@ describe("When token is valid", () => {
     user = await User.findOne({ where: { email: validUser.email } });
   });
   afterAll(async () => {
-    return await User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("should set user to active", () => {
     expect(user.active).toBe(true);
@@ -256,7 +256,7 @@ describe("When token is not valid", () => {
     user = await User.findOne({ where: { email: validUser.email } });
   });
   afterAll(async () => {
-    return await User.destroy({ truncate: true });
+    User.destroy({ truncate: true, cascade: true });
   });
   it("should not set user to active", () => {
     expect(user.active).toBe(false);
