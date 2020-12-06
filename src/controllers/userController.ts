@@ -16,8 +16,8 @@ import {
 import {
   AuthenticationException,
   ForbiddenException,
+  NotFoundException,
   UnexpectedException,
-  UserNotFoundException,
 } from "../utils/errorUtils";
 
 interface IDictionary {
@@ -96,7 +96,7 @@ export const getUser = async (
     const user = await findUserById(id);
     res.status(200).send(user);
   } catch (error) {
-    next(new UserNotFoundException());
+    next(new NotFoundException("User not found"));
   }
 };
 

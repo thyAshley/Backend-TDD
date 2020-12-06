@@ -4,11 +4,16 @@ import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 
 import {
+  NotFoundException,
   AuthenticationException,
   ForbiddenException,
+  ValidationException,
+  UnexpectedException,
 } from "../utils/errorUtils";
 import User from "../model/User";
 import * as TokenService from "../utils/TokenService";
+import { ValidationError } from "sequelize/types";
+import { findByEmail } from "../utils/userUtils";
 
 export const login = async (
   req: Request,
@@ -57,4 +62,25 @@ export const logUserOut = async (
     await TokenService.deleteToken(token);
   }
   res.send();
+};
+
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(new ValidationException("Invalid Email Format"));
+  }
+  const { email } = req.body;
+  try {
+    const user = await findByEmail(email);
+    if (!user) {
+      return next(new NotFoundException("Email not found"));
+    }
+    res.status(200).send();
+  } catch (error) {
+    return next(new UnexpectedException());
+  }
 };

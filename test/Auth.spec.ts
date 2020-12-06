@@ -49,7 +49,6 @@ const updateUser = async (
   if (token) {
     updateAgent.set("Authorization", `Bearer ${token}`);
   }
-
   return updateAgent.send(body);
 };
 

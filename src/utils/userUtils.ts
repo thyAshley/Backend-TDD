@@ -2,13 +2,17 @@ import User from "../model/User";
 import {
   InvalidTokenException,
   EmailException,
-  UserNotFoundException,
+  NotFoundException,
 } from "../utils/errorUtils";
 import Sequelize from "sequelize";
 import { randomString } from "./generator";
 
 export const findByEmail = async (email: string) => {
-  const user = await User.findOne({ where: { email } });
+  return User.findOne({ where: { email } });
+};
+
+export const findExistingEmail = async (email: string) => {
+  const user = await findByEmail(email);
   if (user) throw new EmailException();
 };
 
@@ -56,7 +60,7 @@ export const findUserById = async (id: string) => {
     where: { id: id, active: true },
     attributes: ["id", "username", "email"],
   });
-  if (!user) throw new UserNotFoundException();
+  if (!user) throw new NotFoundException("User not found");
   return user;
 };
 

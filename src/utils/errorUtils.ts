@@ -1,3 +1,10 @@
+export class ValidationException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.status = 400;
+    this.name = "ValidationException";
+  }
+}
 export class InvalidTokenException extends Error {
   constructor() {
     super();
@@ -23,14 +30,6 @@ export class UnexpectedException extends Error {
     this.name = "UnexpectedException";
   }
 }
-export class UserNotFoundException extends Error {
-  constructor() {
-    super();
-    this.status = 404;
-    this.message = "User not found";
-    this.name = "UserNotFoundException";
-  }
-}
 
 export class AuthenticationException extends Error {
   constructor() {
@@ -45,6 +44,14 @@ export class ForbiddenException extends Error {
   constructor(message: string = "You are not authorize to update the user") {
     super(message);
     this.status = 403;
+    this.name = "ForbiddenException";
+  }
+}
+
+export class NotFoundException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.status = 404;
     this.name = "ForbiddenException";
   }
 }

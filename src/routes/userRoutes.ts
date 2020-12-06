@@ -1,7 +1,7 @@
 import express from "express";
 import { check } from "express-validator";
 
-import { findByEmail } from "../utils/userUtils";
+import { findExistingEmail } from "../utils/userUtils";
 import {
   registerUser,
   activateUserAccount,
@@ -32,7 +32,7 @@ router
       .isEmail()
       .withMessage("Email is not valid")
       .bail()
-      .custom(findByEmail),
+      .custom(findExistingEmail),
     check("password", "Password cannot be null")
       .notEmpty()
       .bail()

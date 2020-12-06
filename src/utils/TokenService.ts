@@ -4,8 +4,6 @@ import { randomString } from "../utils/generator";
 import Token from "../model/Token";
 import User from "../model/User";
 
-const expiredDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
 export const createToken = async (user: User) => {
   const token = randomString(32);
   await Token.create({
@@ -17,6 +15,7 @@ export const createToken = async (user: User) => {
 };
 
 export const verifyToken = async (token: string) => {
+  const expiredDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const storedToken = await Token.findOne({
     where: {
       token: token,
@@ -29,6 +28,7 @@ export const verifyToken = async (token: string) => {
     storedToken.lastUsedAt = new Date();
     await storedToken.save();
   }
+
   const userId = storedToken.userId;
   return { id: userId };
 };
@@ -38,6 +38,7 @@ export const deleteToken = async (token: string) => {
 };
 
 export const scheduleCleanup = () => {
+  const expiredDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   setInterval(async () => {
     await Token.destroy({
       where: {
