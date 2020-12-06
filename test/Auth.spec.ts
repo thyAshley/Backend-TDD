@@ -39,6 +39,20 @@ const createUser = async (user = validUser) => {
   });
 };
 
+const updateUser = async (
+  id: string | number = 5,
+  token: string,
+  body?: {}
+) => {
+  let updateAgent = request(app).put(`/api/v1/users/${id}`);
+
+  if (token) {
+    updateAgent.set("Authorization", `Bearer ${token}`);
+  }
+
+  return updateAgent.send(body);
+};
+
 const postAuthentication = async (
   credentials: {
     email: string;
@@ -58,7 +72,7 @@ describe("When credentials given is correct", () => {
     response = await postAuthentication();
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
   it("returns status code 200", () => {
     expect(response.status).toBe(200);
@@ -111,7 +125,7 @@ describe("When user does not exist in database", () => {
     });
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
   it("returns status code 401", () => {
     expect(response.status).toBe(401);
@@ -134,7 +148,7 @@ describe("when logging in with an inactive account", () => {
     });
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
 
   it("should return 403", () => {
@@ -156,14 +170,17 @@ describe("when credentials are correct", () => {
     response = await postAuthentication();
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
-  it("returns jwt token", () => {
+  it("returns token", () => {
     expect(response.body.token).not.toBeUndefined();
   });
 });
 
 describe("Logged Out", () => {
+  afterAll(async () => {
+    await User.destroy({ truncate: true, cascade: true });
+  });
   it("returns 200 ok when unauthorized request send for logout", async () => {
     const response = await postLogout();
     expect(response.status).toBe(200);
@@ -178,5 +195,56 @@ describe("Logged Out", () => {
     await postLogout(token);
     const storedToken = await Token.findOne({ where: { token } });
     expect(storedToken).toBeNull();
+  });
+});
+
+describe("Testing Token lastUsedByDate", () => {
+  let user: User;
+  const expiredToken = "expired";
+  const freshToken = "new";
+  beforeAll(async () => {
+    await createUser();
+    user = await User.findOne({ where: { email: validUser.email } });
+    const expiredDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const unexpiredDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    await Token.create({
+      token: expiredToken,
+      lastUsedAt: expiredDate,
+      userId: user.id,
+    });
+    await Token.create({
+      token: freshToken,
+      lastUsedAt: unexpiredDate,
+      userId: user.id,
+    });
+  });
+  afterAll(async () => {
+    await User.destroy({ truncate: true, cascade: true });
+  });
+  it("returns 403 when token is older than 1 week", async () => {
+    const response = await updateUser(user.id, expiredToken, {
+      username: "updated",
+    });
+    expect(response.status).toBe(403);
+  });
+  it("refresh lastUsedAt when unexpired token is used", async () => {
+    const timeBeforeRequest = new Date();
+    await updateUser(user.id, freshToken, {
+      username: "updated",
+    });
+    const tokeninDB = await Token.findOne({ where: { token: freshToken } });
+
+    expect(tokeninDB.lastUsedAt.getTime()).toBeGreaterThan(
+      timeBeforeRequest.getTime()
+    );
+  });
+  it("refresh lastUsedAt when unexpired token is used for unauthenticated endpoint", async () => {
+    const timeBeforeRequest = new Date().getTime();
+    await request
+      .agent("/api/v1/users")
+      .set("Authoriation", `Bearer ${freshToken}`);
+    const tokeninDB = await Token.findOne({ where: { token: freshToken } });
+
+    expect(tokeninDB.lastUsedAt.getTime()).toBeGreaterThan(timeBeforeRequest);
   });
 });

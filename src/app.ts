@@ -2,9 +2,11 @@ import express, { Request, Response, NextFunction } from "express";
 
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
+import { tokenAuthentication } from "./middleware/tokenAuthentication";
 
 const app = express();
 app.use(express.json());
+app.use(tokenAuthentication);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/auth", authRoutes);
 

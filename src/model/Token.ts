@@ -3,12 +3,14 @@ import { sequelize } from "../db/database";
 
 class Token extends Model implements IToken {
   token: string;
-  userId: number;
+  lastUsedAt: Date;
+  userId: string;
 }
 
 interface IToken {
   token: string;
-  userId: number;
+  lastUsedAt: Date;
+  userId: string;
 }
 
 Token.init(
@@ -16,10 +18,14 @@ Token.init(
     token: {
       type: DataTypes.STRING,
     },
+    lastUsedAt: {
+      type: DataTypes.DATE,
+    },
   },
   {
     sequelize,
     modelName: "token",
+    timestamps: false,
   }
 );
 

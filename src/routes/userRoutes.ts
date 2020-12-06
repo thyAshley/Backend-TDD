@@ -11,19 +11,14 @@ import {
   deleteUser,
 } from "../controllers/userController";
 import { pagination } from "../middleware/paginationMiddleware";
-import { tokenAuthentication } from "../middleware/tokenAuthentication";
 
 const router = express.Router();
 
-router
-  .route("/:id")
-  .get(getUser)
-  .put(tokenAuthentication, updateUser)
-  .delete(tokenAuthentication, deleteUser);
+router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
 
 router
   .route("/")
-  .get(pagination, tokenAuthentication, getAllUsers)
+  .get(pagination, getAllUsers)
   .post(
     check("username")
       .notEmpty()
