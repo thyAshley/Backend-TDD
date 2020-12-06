@@ -4,6 +4,8 @@ import { randomString } from "../utils/generator";
 import Token from "../model/Token";
 import User from "../model/User";
 
+const expiredDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
 export const createToken = async (user: User) => {
   const token = randomString(32);
   await Token.create({
@@ -15,12 +17,11 @@ export const createToken = async (user: User) => {
 };
 
 export const verifyToken = async (token: string) => {
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const storedToken = await Token.findOne({
     where: {
       token: token,
       lastUsedAt: {
-        [Sequelize.Op.gt]: oneWeekAgo,
+        [Sequelize.Op.gt]: expiredDate,
       },
     },
   });
@@ -34,6 +35,18 @@ export const verifyToken = async (token: string) => {
 
 export const deleteToken = async (token: string) => {
   await Token.destroy({ where: { token: token } });
+};
+
+export const scheduleCleanup = () => {
+  setInterval(async () => {
+    await Token.destroy({
+      where: {
+        lastUsedAt: {
+          [Sequelize.Op.lt]: expiredDate,
+        },
+      },
+    });
+  }, 60 * 60 * 1000);
 };
 
 // import jwt from "jsonwebtoken";

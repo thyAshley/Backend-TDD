@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 
 import app from "./src/app";
 import User from "./src/model/User";
+import * as TokenService from "./src/utils/TokenService";
 import { sequelize } from "./src/db/database";
 
 const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
@@ -18,6 +19,8 @@ const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
 sequelize.sync({ force: true }).then(async () => {
   createUsers(20);
 });
+
+TokenService.scheduleCleanup();
 
 app.listen(3000, () => {
   console.log("Backend started on port 3000");

@@ -240,11 +240,10 @@ describe("Testing Token lastUsedByDate", () => {
   });
   it("refresh lastUsedAt when unexpired token is used for unauthenticated endpoint", async () => {
     const timeBeforeRequest = new Date().getTime();
-    await request
-      .agent("/api/v1/users")
-      .set("Authoriation", `Bearer ${freshToken}`);
+    const req = await request(app)
+      .get("/api/v1/users")
+      .set("Authorization", `Bearer ${freshToken}`);
     const tokeninDB = await Token.findOne({ where: { token: freshToken } });
-
     expect(tokeninDB.lastUsedAt.getTime()).toBeGreaterThan(timeBeforeRequest);
   });
 });
