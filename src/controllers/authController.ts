@@ -1,10 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 
 import {
-  NotFoundException,
   AuthenticationException,
   ForbiddenException,
   ValidationException,
@@ -12,8 +10,11 @@ import {
 } from "../utils/errorUtils";
 import User from "../model/User";
 import * as TokenService from "../utils/TokenService";
-import { ValidationError } from "sequelize/types";
-import { findByEmail } from "../utils/userUtils";
+import { passwordResetRequest } from "../utils/userUtils";
+
+interface IDictionary {
+  [key: string]: string;
+}
 
 export const login = async (
   req: Request,
@@ -75,12 +76,53 @@ export const resetPassword = async (
   }
   const { email } = req.body;
   try {
-    const user = await findByEmail(email);
-    if (!user) {
-      return next(new NotFoundException("Email not found"));
-    }
-    res.status(200).send();
+    await passwordResetRequest(email);
+
+    res
+      .status(200)
+      .json({ message: "Check your e-mail for resetting your password" });
   } catch (error) {
-    return next(new UnexpectedException());
+    if (error.status === 404) {
+      return next(error);
+    }
+    if (error.status === 502) {
+      return next(error);
+    }
+    next(new UnexpectedException());
+  }
+};
+
+export const changePasswordWithToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const errors = validationResult(req);
+
+  const { token } = req.body;
+  try {
+    const user = await User.findOne({ where: { passwordResetToken: token } });
+    if (!user) {
+      next(
+        new ForbiddenException(
+          "You are not authorized to perform this action, you may have provided an incorrect key"
+        )
+      );
+    }
+
+    if (!errors.isEmpty()) {
+      const validationErrors = <IDictionary>{};
+      errors
+        .array()
+        .forEach((error) => (validationErrors[error.param] = error.msg));
+      return res.status(400).json({
+        validationErrors: validationErrors,
+        message: "Validation Failure",
+        path: req.originalUrl,
+        timestamp: "",
+      });
+    }
+  } catch (error) {
+    next(new UnexpectedException());
   }
 };

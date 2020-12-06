@@ -1,13 +1,34 @@
 import request from "supertest";
 import app from "../src/app";
-import { SMTPServer } from "smtp-server";
 import bcrypt from "bcryptjs";
+import { SMTPServer } from "smtp-server";
 import { sequelize } from "../src/db/database";
 
 import User from "../src/model/User";
 
+let lastMail: string;
+let simulateSMTPFailure = false;
+
+const server = new SMTPServer({
+  authOptional: true,
+  onData(stream, session, callball) {
+    let mail: string;
+    stream.on("data", (data) => {
+      mail += data.toString();
+    });
+    stream.on("end", () => {
+      if (simulateSMTPFailure) {
+        const err = new Error("invalid mailbox");
+        callball(err);
+      }
+      lastMail = mail;
+      callball();
+    });
+  },
+});
+
 const postPasswordReset = (email: string = "user1@mail.com") => {
-  const agent = request(app).post("/api/v1/auth/forgot-password");
+  const agent = request(app).post("/api/v1/auth/password");
 
   return agent.send({ email });
 };
@@ -26,27 +47,12 @@ const createUser = async (user = validUser) => {
 };
 beforeAll(async () => {
   await sequelize.sync();
+  await server.listen(8587, "localhost");
 });
 
-// const simulateSMTPFailure = false;
-
-// const server = new SMTPServer({
-//   authOptional: true,
-//   onData(stream, session, callball) {
-//     let mail: string;
-//     stream.on("data", (data) => {
-//       mail += data.toString();
-//     });
-//     stream.on("end", () => {
-//       if (simulateSMTPFailure) {
-//         const err = new Error("invalid mailbox");
-//         callball(err);
-//       }
-//       lastMail = mail;
-//       callball();
-//     });
-//   },
-// });
+afterAll(async () => {
+  await server.close();
+});
 
 describe("Sending Password Request for unknown user", () => {
   let response: request.Response;
@@ -61,7 +67,7 @@ describe("Sending Password Request for unknown user", () => {
   it("received fail message", () => {
     const timeAfterRequest = new Date().getTime();
     expect(response.body.message).toBe("Email not found");
-    expect(response.body.path).toBe("/api/v1/auth/forgot-password");
+    expect(response.body.path).toBe("/api/v1/auth/password");
     expect(response.body.timestamp).toBeLessThan(timeAfterRequest);
   });
 });
@@ -80,16 +86,18 @@ describe("Sending Password Request without email address", () => {
     const timeAfterRequest = new Date().getTime();
     expect(response.body.message).toBe("Invalid Email Format");
     expect(response.body.name).toBe("ValidationException");
-    expect(response.body.path).toBe("/api/v1/auth/forgot-password");
+    expect(response.body.path).toBe("/api/v1/auth/password");
     expect(response.body.timestamp).toBeLessThan(timeAfterRequest);
   });
 });
 
 describe("when password reset is sent for valid user", () => {
   let response: request.Response;
+  let user: User;
   beforeAll(async () => {
     await createUser();
     response = await postPasswordReset(validUser.email);
+    user = await User.findOne({ where: { email: validUser.email } });
   });
 
   afterAll(async () => {
@@ -97,5 +105,60 @@ describe("when password reset is sent for valid user", () => {
   });
   it("returns status code 200", () => {
     expect(response.status).toBe(200);
+  });
+  it("return success body message", () => {
+    expect(response.body.message).toBe(
+      "Check your e-mail for resetting your password"
+    );
+  });
+  it("creates a password reset token", () => {
+    expect(user.passwordResetToken).toBeTruthy();
+  });
+  it("sends a password reset email with password reset token", () => {
+    expect(lastMail).toContain(validUser.email);
+    expect(lastMail).toContain(user.passwordResetToken);
+  });
+  it("return 502 bad gateway when sending email fail", async () => {
+    simulateSMTPFailure = true;
+    response = await postPasswordReset(validUser.email);
+    expect(response.status).toBe(502);
+  });
+});
+
+const putPasswordUpdate = (password: string, token: string) => {
+  return request(app).put("/api/v1/auth/password").send({ password, token });
+};
+
+describe("When password reset request is sent with invalid token", () => {
+  let response: request.Response;
+  beforeAll(async () => {
+    response = await putPasswordUpdate("P4ssword2", "invalid token");
+  });
+  it("return status code 403", () => {
+    expect(response.status).toBe(403);
+  });
+  it("return error messages", () => {
+    const timeAfterRequest = new Date().getTime();
+    expect(response.body.message).toBe(
+      "You are not authorized to perform this action, you may have provided an incorrect key"
+    );
+    expect(response.body.name).toBe("ForbiddenException");
+    expect(response.body.path).toBe("/api/v1/auth/password");
+    expect(response.body.timestamp).toBeLessThan(timeAfterRequest);
+  });
+});
+
+describe("When password reset request is sent with valid token but invalid password", () => {
+  let response: request.Response;
+  let user: User;
+  beforeAll(async () => {
+    user = await createUser();
+    user.passwordResetToken = "test-token";
+    await user.save();
+    response = await putPasswordUpdate("notvalid", user.passwordResetToken);
+  });
+  it("return status code 400", () => {
+    expect(response.status).toBe(400);
+    expect(response.body.path).toBe("/api/v1/auth/password");
   });
 });

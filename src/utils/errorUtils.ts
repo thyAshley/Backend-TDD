@@ -17,6 +17,7 @@ export class InvalidTokenException extends Error {
 export class EmailException extends Error {
   constructor() {
     super();
+    this.status = 502;
     this.message = "E-mail already exist";
     this.name = "EmailException";
   }

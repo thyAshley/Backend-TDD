@@ -1,10 +1,12 @@
+import Sequelize from "sequelize";
+
 import User from "../model/User";
 import {
   InvalidTokenException,
   EmailException,
   NotFoundException,
 } from "../utils/errorUtils";
-import Sequelize from "sequelize";
+import * as EmailService from "../email/EmailService";
 import { randomString } from "./generator";
 
 export const findByEmail = async (email: string) => {
@@ -79,4 +81,19 @@ export const deleteUserById = async (id: string) => {
 
 export const generateToken = () => {
   return randomString(16);
+};
+
+export const passwordResetRequest = async (email: string) => {
+  const user = await findByEmail(email);
+  if (!user) {
+    throw new NotFoundException("Email not found");
+  }
+  user.passwordResetToken = randomString(8);
+  await user.save();
+  try {
+    await EmailService.sendPasswordResetMail(email, user.passwordResetToken);
+  } catch (error) {
+    throw new EmailException();
+  }
+  return user;
 };

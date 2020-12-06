@@ -26,3 +26,25 @@ export const sendAccountActivation = async (
     console.log("url: " + nodemailer.getTestMessageUrl(info));
   }
 };
+
+export const sendPasswordResetMail = async (
+  email: string,
+  resetToken: string
+) => {
+  const info = await transporter.sendMail({
+    from: "Admin <admin@tdd.com>",
+    to: email,
+    subject: "Password Reset",
+    html: `
+    <div>
+      <b>Please click below link to reset your password</b>
+    </div>
+    <div>
+      Your Password Reset Token is ${resetToken}, Please ignore this email if you did not request this
+    </div>
+    `,
+  });
+  if (process.env.NODE_ENV === "dev") {
+    console.log("url: " + nodemailer.getTestMessageUrl(info));
+  }
+};
