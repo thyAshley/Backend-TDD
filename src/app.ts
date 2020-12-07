@@ -3,8 +3,11 @@ import express, { Request, Response, NextFunction } from "express";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
 import { tokenAuthentication } from "./middleware/tokenAuthentication";
+import * as FileService from "./utils/FileService";
 
 const app = express();
+FileService.createFolder();
+
 app.use(express.json());
 app.use(tokenAuthentication);
 app.use("/api/v1/users", userRoutes);

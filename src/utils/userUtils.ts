@@ -11,6 +11,7 @@ import {
 } from "../utils/errorUtils";
 import * as TokenService from "./TokenService";
 import * as EmailService from "../email/EmailService";
+import * as FileService from "../utils/FileService";
 import { randomString } from "./generator";
 
 export const findByEmail = async (email: string) => {
@@ -75,9 +76,17 @@ export const updateUserById = async (
   fields: { username: string; image: string }
 ) => {
   const user = await User.findOne({ where: { id: id } });
-  user.username = fields.username || user.username;
-  user.image = fields.image || user.image;
+  if (fields.image) {
+    const filename = await FileService.saveProfileImage(fields.image);
+    user.image = filename;
+  }
+
+  if (fields.username) {
+    user.username = fields.username;
+  }
+
   await user.save();
+
   return {
     id,
     username: user.username,

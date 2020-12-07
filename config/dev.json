@@ -14,5 +14,7 @@
       "user": "emile.koch65@ethereal.email",
       "pass": "eqqB4BWvfj6P1bsAtE"
     }
-  }
+  },
+  "uploadDir": "uploads-dev",
+  "profileDir": "profile"
 }

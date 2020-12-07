@@ -15,12 +15,11 @@ const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
     });
   }
 };
+TokenService.scheduleCleanup();
 
 sequelize.sync({ force: true }).then(async () => {
   createUsers(10, 10);
 });
-
-TokenService.scheduleCleanup();
 
 app.listen(3000, () => {
   console.log("Backend started on port 3000");
