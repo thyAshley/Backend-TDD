@@ -112,10 +112,9 @@ export const updateUser = async (
         new ForbiddenException("You are not authorize to update the user")
       );
     }
-    await updateUserById(req.params.id, req.body);
-    return res.status(200).json({
-      message: "User updated successfully",
-    });
+    const updatedUser = await updateUserById(req.params.id, req.body);
+
+    return res.status(200).send(updatedUser);
   } catch (error) {
     next(new UnexpectedException());
   }

@@ -51,7 +51,7 @@ describe("Listing Users", () => {
     await createUsers(1);
     const response = await getUsers();
     expect(Object.keys(response.body.content[0])).toEqual(
-      expect.arrayContaining(["id", "username", "email"])
+      expect.arrayContaining(["id", "username", "email", "image"])
     );
   });
   it("return 2 totalPage when 10 < active user < 20", async () => {

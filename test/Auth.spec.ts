@@ -80,7 +80,7 @@ describe("When credentials given is correct", () => {
     expect(response.body.username).toBe(validUser.username);
     expect(response.body.id).toBeTruthy();
     expect(Object.keys(response.body)).toEqual(
-      expect.arrayContaining(["id", "username", "token"])
+      expect.arrayContaining(["id", "username", "token", "image"])
     );
   });
 });

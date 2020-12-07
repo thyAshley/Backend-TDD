@@ -7,12 +7,14 @@ import {
   EmailException,
   NotFoundException,
   ForbiddenException,
+  InactiveAccountException,
 } from "../utils/errorUtils";
+import * as TokenService from "./TokenService";
 import * as EmailService from "../email/EmailService";
 import { randomString } from "./generator";
 
 export const findByEmail = async (email: string) => {
-  return User.findOne({ where: { email } });
+  return User.findOne({ where: { email: email } });
 };
 
 export const findExistingEmail = async (email: string) => {
@@ -49,7 +51,7 @@ export const getUsers = async (
     },
     limit: pageSize,
     offset: page * pageSize,
-    attributes: ["id", "username", "email"],
+    attributes: ["id", "username", "email", "image"],
   });
   return {
     content: usersWithCount.rows,
@@ -62,7 +64,7 @@ export const getUsers = async (
 export const findUserById = async (id: string) => {
   const user = await User.findOne({
     where: { id: id, active: true },
-    attributes: ["id", "username", "email"],
+    attributes: ["id", "username", "email", "image"],
   });
   if (!user) throw new NotFoundException("User not found");
   return user;
@@ -70,11 +72,18 @@ export const findUserById = async (id: string) => {
 
 export const updateUserById = async (
   id: string,
-  fields: { username: string }
+  fields: { username: string; image: string }
 ) => {
   const user = await User.findOne({ where: { id: id } });
   user.username = fields.username || user.username;
+  user.image = fields.image || user.image;
   await user.save();
+  return {
+    id,
+    username: user.username,
+    email: user.email,
+    image: user.image,
+  };
 };
 
 export const deleteUserById = async (id: string) => {
@@ -97,7 +106,9 @@ export const updatePassword = async (token: string, password: string) => {
   }
   const hash = await bcrypt.hash(password, 10);
   user.password = hash;
+  user.passwordResetToken = null;
   await user.save();
+  await TokenService.deleteAllUserToken(user.id);
 };
 
 export const passwordResetRequest = async (email: string) => {
@@ -105,12 +116,17 @@ export const passwordResetRequest = async (email: string) => {
   if (!user) {
     throw new NotFoundException("Email not found");
   }
+  if (!user.active) {
+    throw new InactiveAccountException(
+      "Account is not activated, please activate your account first"
+    );
+  }
+
   user.passwordResetToken = randomString(8);
-  await user.save();
   try {
+    await user.save();
     await EmailService.sendPasswordResetMail(email, user.passwordResetToken);
   } catch (error) {
     throw new EmailException();
   }
-  return user;
 };

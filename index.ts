@@ -17,7 +17,7 @@ const createUsers = async (activeCount: number, inactiveCount: number = 0) => {
 };
 
 sequelize.sync({ force: true }).then(async () => {
-  createUsers(20);
+  createUsers(10, 10);
 });
 
 TokenService.scheduleCleanup();

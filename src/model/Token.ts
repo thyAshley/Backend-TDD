@@ -2,12 +2,14 @@ import { Model, DataTypes } from "sequelize";
 import { sequelize } from "../db/database";
 
 class Token extends Model implements IToken {
+  readonly id?: string;
   token: string;
   lastUsedAt: Date;
   userId: string;
 }
 
 interface IToken {
+  readonly id?: string;
   token: string;
   lastUsedAt: Date;
   userId: string;

@@ -37,6 +37,10 @@ export const deleteToken = async (token: string) => {
   await Token.destroy({ where: { token: token } });
 };
 
+export const deleteAllUserToken = async (userId: string) => {
+  await Token.destroy({ where: { userId } });
+};
+
 export const scheduleCleanup = () => {
   const expiredDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   setInterval(async () => {

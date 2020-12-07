@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import User from "../src/model/User";
 import { sequelize } from "../src/db/database";
 import app from "../src/app";
+import fs from "fs";
+import path from "path";
+import { userInfo } from "os";
 
 const validUser = {
   username: "user1",
@@ -127,11 +130,42 @@ describe("When valid auth and active users send an update request", () => {
     const updatedUser = await User.findOne({ where: { id: user.id } });
     expect(updatedUser.username).toBe(update.username);
   });
-  it("return succesful update message", () => {
-    expect(response.body.message).toContain("successful");
-  });
   it("returns 403 when invalid token is sent", async () => {
     const response = await updateUser(5, { auth: { token: "token" } }, null);
     expect(response.status).toBe(403);
+  });
+});
+
+describe("When user update their image", () => {
+  let inDbUser: User;
+  let response: request.Response;
+  beforeAll(async () => {
+    const filePath = path.join(__dirname, "resources", "test-png.png");
+    const fileInBase64 = fs.readFileSync(filePath, { encoding: "base64" });
+    const saveUser = await createUser();
+    const validUpdate = { username: "user1-update", image: "fileInBase64" };
+    response = await updateUser(
+      saveUser.id,
+      { auth: { email: validUser.email, password: "P4ssword" } },
+      validUpdate
+    );
+    inDbUser = await User.findOne({ where: { id: saveUser.id } });
+  });
+  afterAll(async () => {
+    User.destroy({ truncate: true, cascade: true });
+  });
+  it("save the user image as base64", async () => {
+    expect(inDbUser.image).toBeTruthy();
+  });
+
+  it("returns success body", () => {
+    expect(response.status).toBe(200);
+    console.log(Object.keys(response.body));
+    expect(Object.keys(response.body)).toEqual([
+      "id",
+      "username",
+      "email",
+      "image",
+    ]);
   });
 });

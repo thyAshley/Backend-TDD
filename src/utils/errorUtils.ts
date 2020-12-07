@@ -1,3 +1,11 @@
+export class InactiveAccountException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.status = 400;
+    this.name = "InactiveAccountException";
+  }
+}
+
 export class ValidationException extends Error {
   constructor(message: string) {
     super(message);

@@ -46,6 +46,7 @@ export const login = async (
       id: user.id,
       username: user.username,
       token,
+      image: user.image,
     });
   } catch (error) {
     res.status(400).send("error");
@@ -77,17 +78,14 @@ export const resetPassword = async (
   const { email } = req.body;
   try {
     await passwordResetRequest(email);
-
     res
       .status(200)
       .json({ message: "Check your e-mail for resetting your password" });
   } catch (error) {
-    if (error.status === 404) {
+    if ([400, 404, 502].includes(error.status)) {
       return next(error);
     }
-    if (error.status === 502) {
-      return next(error);
-    }
+
     next(new UnexpectedException());
   }
 };
@@ -122,9 +120,10 @@ export const changePasswordWithToken = async (
     await updatePassword(token, password);
     res.status(200).send({ message: "ok" });
   } catch (error) {
-    if (error.status === 403) {
+    if ([403, 404].includes(error.status)) {
       next(error);
     }
+
     next(new UnexpectedException());
   }
 };

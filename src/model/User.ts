@@ -13,6 +13,7 @@ class User extends UserModel implements IUser {
   active: boolean;
   activationToken: string;
   passwordResetToken?: string;
+  image?: string;
 }
 
 interface IUser extends Model {
@@ -23,6 +24,7 @@ interface IUser extends Model {
   active?: boolean;
   activationToken?: string;
   passwordResetToken?: string;
+  image?: string;
 }
 
 User.init(
@@ -36,6 +38,9 @@ User.init(
     },
     password: {
       type: DataTypes.CHAR(60),
+    },
+    image: {
+      type: DataTypes.STRING,
     },
     active: {
       type: DataTypes.BOOLEAN,

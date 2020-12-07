@@ -10,7 +10,6 @@ import {
 
 const router = express.Router();
 
-router.post("/", check("email").isEmail(), login);
 router
   .route("/password")
   .post(
@@ -31,5 +30,7 @@ router
     changePasswordWithToken
   );
 router.post("/logout", logUserOut);
+
+router.post("/", check("email").isEmail(), login);
 
 export default router;

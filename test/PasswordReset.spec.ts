@@ -5,6 +5,7 @@ import { SMTPServer } from "smtp-server";
 import { sequelize } from "../src/db/database";
 
 import User from "../src/model/User";
+import Token from "../src/model/Token";
 
 let lastMail: string;
 let simulateSMTPFailure = false;
@@ -33,14 +34,17 @@ const putPasswordUpdate = (password: string, token: string) => {
 
 const postPasswordReset = (email: string = "user1@mail.com") => {
   const agent = request(app).post("/api/v1/auth/password");
-
   return agent.send({ email });
 };
 
 const validUser = {
   username: "user1",
-  email: "user1@test.com",
+  email: "user1@mail.com",
   active: true,
+};
+const invalidUser = {
+  ...validUser,
+  active: false,
 };
 
 const createUser = async (user = validUser) => {
@@ -62,7 +66,7 @@ describe("Sending Password Request for unknown user", () => {
   let response: request.Response;
 
   beforeAll(async () => {
-    response = await postPasswordReset();
+    response = await postPasswordReset("invalid@gmail.com");
   });
 
   it("returns 404 not found", () => {
@@ -105,7 +109,8 @@ describe("when password reset is sent for valid user", () => {
   });
 
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    simulateSMTPFailure = false;
+    await User.destroy({ truncate: true });
   });
   it("returns status code 200", () => {
     expect(response.status).toBe(200);
@@ -177,31 +182,83 @@ describe("When password reset request is sent with valid token but invalid passw
     response = await putPasswordUpdate("notvalid", user.passwordResetToken);
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    await User.destroy({ truncate: true });
   });
   it("return status code 400", () => {
     expect(response.status).toBe(400);
     expect(response.body.path).toBe("/api/v1/auth/password");
   });
 });
+
 describe("When password reset request is sent with valid token and valid password", () => {
   let response: request.Response;
   let user: User;
+  let userinDB: User;
+
   beforeAll(async () => {
     user = await createUser();
     user.passwordResetToken = "test-token";
+    await Token.create({
+      token: "token-1",
+      userId: user.id,
+      lastUsedAt: Date.now(),
+    });
+    await Token.create({
+      token: "token-2",
+      userId: user.id,
+      lastUsedAt: Date.now(),
+    });
+    await Token.create({
+      token: "token-3",
+      lastUsedAt: Date.now(),
+    });
     await user.save();
     response = await putPasswordUpdate("P4ssword-1", user.passwordResetToken);
+    userinDB = await User.findOne({ where: { email: validUser.email } });
   });
   afterAll(async () => {
-    User.destroy({ truncate: true });
+    await User.destroy({ truncate: true, cascade: true });
+    await Token.destroy({ truncate: true });
   });
   it("return status code 200", () => {
     expect(response.status).toBe(200);
   });
   it("update password in db", async () => {
-    const userInDb = await User.findOne({ where: { email: validUser.email } });
+    expect(userinDB.password).not.toEqual(user.password);
+  });
+  it("sets clears the reset token in database", async () => {
+    expect(userinDB.passwordResetToken).toBeNull();
+  });
+  it("clears all token of user", async () => {
+    const tokens = await Token.findAll({ where: { userId: user.id } });
+    expect(tokens).toHaveLength(0);
+  });
+  it("does not clear token of other user", async () => {
+    const tokens = await Token.findAll();
+    expect(tokens).toHaveLength(1);
+  });
+});
 
-    expect(userInDb.password).not.toEqual(user.password);
+describe("When requesting password reset for inactive account", () => {
+  let response: request.Response;
+  let user: User;
+  beforeAll(async () => {
+    await createUser(invalidUser);
+    response = await postPasswordReset(invalidUser.email);
+    user = await User.findOne({ where: { email: invalidUser.email } });
+  });
+  afterAll(async () => {
+    await User.destroy({ truncate: true });
+  });
+  it("return status 400", () => {
+    expect(response.status).toBe(400);
+  });
+  it("return error message", () => {
+    expect(response.body.message).toBe(
+      "Account is not activated, please activate your account first"
+    );
+  });
+  it("does not provide a reset token", () => {
+    expect(user.activationToken).toBeNull();
   });
 });
