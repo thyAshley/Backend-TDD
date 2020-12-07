@@ -10,7 +10,7 @@ import {
 } from "../utils/errorUtils";
 import User from "../model/User";
 import * as TokenService from "../utils/TokenService";
-import { passwordResetRequest } from "../utils/userUtils";
+import { passwordResetRequest, updatePassword } from "../utils/userUtils";
 
 interface IDictionary {
   [key: string]: string;
@@ -98,31 +98,33 @@ export const changePasswordWithToken = async (
   next: NextFunction
 ) => {
   const errors = validationResult(req);
-
-  const { token } = req.body;
+  const { token, password } = req.body;
+  if (!token) {
+    next(
+      new ForbiddenException(
+        "You are not authorized to perform this action, you may have provided an incorrect key"
+      )
+    );
+  }
+  if (!errors.isEmpty()) {
+    const validationErrors = <IDictionary>{};
+    errors
+      .array()
+      .forEach((error) => (validationErrors[error.param] = error.msg));
+    return res.status(400).json({
+      validationErrors: validationErrors,
+      message: "Validation Failure",
+      path: req.originalUrl,
+      timestamp: "",
+    });
+  }
   try {
-    const user = await User.findOne({ where: { passwordResetToken: token } });
-    if (!user) {
-      next(
-        new ForbiddenException(
-          "You are not authorized to perform this action, you may have provided an incorrect key"
-        )
-      );
-    }
-
-    if (!errors.isEmpty()) {
-      const validationErrors = <IDictionary>{};
-      errors
-        .array()
-        .forEach((error) => (validationErrors[error.param] = error.msg));
-      return res.status(400).json({
-        validationErrors: validationErrors,
-        message: "Validation Failure",
-        path: req.originalUrl,
-        timestamp: "",
-      });
-    }
+    await updatePassword(token, password);
+    res.status(200).send({ message: "ok" });
   } catch (error) {
+    if (error.status === 403) {
+      next(error);
+    }
     next(new UnexpectedException());
   }
 };

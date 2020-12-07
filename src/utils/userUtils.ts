@@ -1,10 +1,12 @@
 import Sequelize from "sequelize";
+import bcrypt from "bcryptjs";
 
 import User from "../model/User";
 import {
   InvalidTokenException,
   EmailException,
   NotFoundException,
+  ForbiddenException,
 } from "../utils/errorUtils";
 import * as EmailService from "../email/EmailService";
 import { randomString } from "./generator";
@@ -81,6 +83,21 @@ export const deleteUserById = async (id: string) => {
 
 export const generateToken = () => {
   return randomString(16);
+};
+
+export const findByPasswordResetToken = (token: string) => {
+  return User.findOne({ where: { passwordResetToken: token } });
+};
+export const updatePassword = async (token: string, password: string) => {
+  const user = await findByPasswordResetToken(token);
+  if (!user) {
+    throw new ForbiddenException(
+      "You are not authorized to perform this action, you may have provided an incorrect key"
+    );
+  }
+  const hash = await bcrypt.hash(password, 10);
+  user.password = hash;
+  await user.save();
 };
 
 export const passwordResetRequest = async (email: string) => {
