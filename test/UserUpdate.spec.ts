@@ -7,10 +7,19 @@ import fs from "fs";
 import path from "path";
 import config from "config";
 
+const uploadDir: string = config.get("uploadDir");
+const profileDir: string = config.get("profileDir");
+const ProfileDirectory = path.join(".", uploadDir, profileDir);
+
 const validUser = {
   username: "user1",
   email: "user1@test.com",
   active: true,
+};
+
+const readFileAsBase64 = () => {
+  const filePath = path.join(__dirname, "resources", "test-png.png");
+  return fs.readFileSync(filePath, { encoding: "base64" });
 };
 
 const createUser = async (user = validUser) => {
@@ -140,8 +149,7 @@ describe("When user update their image", () => {
   let inDbUser: User;
   let response: request.Response;
   beforeAll(async () => {
-    const filePath = path.join(__dirname, "resources", "test-png.png");
-    const fileInBase64 = fs.readFileSync(filePath, { encoding: "base64" });
+    const fileInBase64 = readFileAsBase64();
     const saveUser = await createUser();
     const validUpdate = { username: "user1-update", image: fileInBase64 };
     response = await updateUser(
@@ -172,14 +180,10 @@ describe("When user update their image", () => {
 describe("When user update their image", () => {
   let inDbUser: User;
   let response: request.Response;
-  let uploadDir: string;
-  let profileDir: string;
+
   let profileImagePath: string;
   beforeAll(async () => {
-    uploadDir = config.get("uploadDir");
-    profileDir = config.get("profileDir");
-    const filePath = path.join(__dirname, "resources", "test-png.png");
-    const fileInBase64 = fs.readFileSync(filePath, { encoding: "base64" });
+    const fileInBase64 = readFileAsBase64();
     const saveUser = await createUser();
     const validUpdate = { username: "user1-update", image: fileInBase64 };
     response = await updateUser(
@@ -188,14 +192,13 @@ describe("When user update their image", () => {
       validUpdate
     );
     inDbUser = await User.findOne({ where: { id: saveUser.id } });
-    profileImagePath = path.join(".", uploadDir, profileDir, inDbUser.image);
+    profileImagePath = path.join(ProfileDirectory, inDbUser.image);
   });
   afterAll(async () => {
     User.destroy({ truncate: true, cascade: true });
-    const profileDirectory = path.join(".", uploadDir, profileDir);
-    const files = fs.readdirSync(profileDirectory);
+    const files = fs.readdirSync(ProfileDirectory);
     for (const file of files) {
-      fs.unlinkSync(path.join(profileDirectory, file));
+      fs.unlinkSync(path.join(ProfileDirectory, file));
     }
   });
   it("save the user image as base64", async () => {
