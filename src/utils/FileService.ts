@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import config from "config";
 import { randomString } from "./generator";
+import { UnexpectedException } from "./errorUtils";
 
 const uploadDir: string = config.get("uploadDir");
 const profileDir: string = config.get("profileDir");
@@ -22,4 +23,9 @@ export const saveProfileImage = async (encodedFile: string) => {
   const filePath = path.join(".", profileFolder, file);
   await fs.promises.writeFile(filePath, encodedFile, "base64");
   return file;
+};
+
+export const deleteProfileImage = async (image: string) => {
+  const filePath = path.join(".", profileFolder, image);
+  await fs.promises.unlink(filePath);
 };

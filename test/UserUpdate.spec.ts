@@ -1,11 +1,13 @@
 import request from "supertest";
 import bcrypt from "bcryptjs";
-import User from "../src/model/User";
-import { sequelize } from "../src/db/database";
-import app from "../src/app";
 import fs from "fs";
 import path from "path";
 import config from "config";
+
+import User from "../src/model/User";
+import { sequelize } from "../src/db/database";
+import * as TestCleanup from "../src/utils/testCleanup";
+import app from "../src/app";
 
 const uploadDir: string = config.get("uploadDir");
 const profileDir: string = config.get("profileDir");
@@ -180,7 +182,6 @@ describe("When user update their image", () => {
 describe("When user update their image", () => {
   let inDbUser: User;
   let response: request.Response;
-
   let profileImagePath: string;
   beforeAll(async () => {
     const fileInBase64 = readFileAsBase64();
@@ -196,12 +197,59 @@ describe("When user update their image", () => {
   });
   afterAll(async () => {
     User.destroy({ truncate: true, cascade: true });
-    const files = fs.readdirSync(ProfileDirectory);
-    for (const file of files) {
-      fs.unlinkSync(path.join(ProfileDirectory, file));
-    }
   });
-  it("save the user image as base64", async () => {
+  it("save the user image as base64", () => {
     expect(fs.existsSync(profileImagePath)).toBeTruthy();
   });
+});
+
+describe("when user upload a new image", () => {
+  afterAll(async () => {
+    User.destroy({ truncate: true, cascade: true });
+    TestCleanup.cleanup();
+  });
+  it("remove the old image", async () => {
+    const fileInBase64 = readFileAsBase64();
+    const saveUser = await createUser();
+    const validUpdate = { image: fileInBase64 };
+    const response = await updateUser(
+      saveUser.id,
+      { auth: { email: validUser.email, password: "P4ssword" } },
+      validUpdate
+    );
+    const firstImage = response.body.image;
+    await updateUser(
+      saveUser.id,
+      { auth: { email: validUser.email, password: "P4ssword" } },
+      validUpdate
+    );
+    const profileImagePath = path.join(ProfileDirectory, firstImage);
+    expect(fs.existsSync(profileImagePath)).toBe(false);
+  });
+});
+
+describe("validation check for username updating", () => {
+  let user: User;
+  beforeAll(async () => {
+    user = await createUser();
+  });
+  it.each`
+    value             | message
+    ${null}           | ${"Username cannot be null"}
+    ${"adm"}          | ${"Username must be between 4 and 32 characters"}
+    ${"a".repeat(33)} | ${"Username must be between 4 and 32 characters"}
+  `(
+    "returns $message when username is $value",
+    async ({ value, message }: { value: string; message: string }) => {
+      const validUpdate = { username: value };
+      const response = await updateUser(
+        user.id,
+        { auth: { email: validUser.email, password: "P4ssword" } },
+        validUpdate
+      );
+
+      expect(response.status).toBe(400);
+      expect(response.body.validationErrors.username).toBe(message);
+    }
+  );
 });

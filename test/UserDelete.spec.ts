@@ -1,5 +1,8 @@
 import request from "supertest";
 import bcrypt from "bcryptjs";
+import path from "path";
+import fs from "fs";
+import config from "config";
 
 import { sequelize } from "../src/db/database";
 import app from "../src/app";
@@ -13,11 +16,36 @@ const validUser = {
   active: true,
 };
 
+const uploadDir: string = config.get("uploadDir");
+const profileDir: string = config.get("profileDir");
+const profilePath = path.join(".", uploadDir, profileDir);
+
 const addUser = async (user = validUser) => {
   return await User.create({
     ...user,
     password: await bcrypt.hash("P4ssword", 10),
   });
+};
+
+const readFileAsBase64 = () => {
+  const filePath = path.join(__dirname, "resources", "test-png.png");
+  return fs.readFileSync(filePath, { encoding: "base64" });
+};
+
+const addImageToUser = async () => {
+  const fileInBase64 = readFileAsBase64();
+  const user = await addUser();
+  await User.findOne({ where: { username: validUser.username } });
+  const tokenResponse = await request(app)
+    .post(`/api/v1/auth`)
+    .send({ email: validUser.email, password: validUser.password });
+
+  const token = tokenResponse.body.token;
+  await request(app)
+    .put(`/api/v1/users/${user.id}`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ image: fileInBase64 });
+  return token;
 };
 
 const auth = async (
@@ -46,7 +74,7 @@ describe("When deleting user without authorization", () => {
     response = await deleteUser(5);
   });
   afterAll(async () => {
-    User.destroy({ truncate: true, cascade: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorized status 401", () => {
     expect(response.status).toBe(401);
@@ -64,7 +92,7 @@ describe("when deleting user with valid credentials but for wrong user", () => {
     await addUser();
   });
   afterAll(async () => {
-    User.destroy({ truncate: true, cascade: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorize", async () => {
     const toDeleteUser = await addUser({
@@ -88,7 +116,7 @@ describe("when deleting user with invalid token", () => {
     requestUser = await addUser();
   });
   afterAll(async () => {
-    User.destroy({ truncate: true, cascade: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorize 401", async () => {
     const response = await deleteUser(requestUser.id, "invalid");
@@ -111,7 +139,7 @@ describe("when deleting user with valid token and valid user", () => {
     response = await deleteUser(requestUser.id, token);
   });
   afterAll(async () => {
-    User.destroy({ truncate: true, cascade: true });
+    await User.destroy({ truncate: true, cascade: true });
   });
   it("returns unauthorize 401", async () => {
     expect(response.status).toBe(200);
@@ -134,5 +162,17 @@ describe("when deleting user with valid token and valid user", () => {
     response = await deleteUser(requestUser.id, tokenOne.body.token);
     dbToken = await Token.findAll();
     expect(dbToken).toHaveLength(0);
+  });
+});
+
+describe("when deleting user from database", () => {
+  afterAll(async () => {
+    await User.destroy({ truncate: true, cascade: true });
+  });
+  it("should delete user image from folder", async () => {
+    const token = await addImageToUser();
+    const user = await User.findOne({ where: { email: validUser.email } });
+    await deleteUser(user.id, token);
+    expect(fs.existsSync(path.join(profilePath, user.image))).toBeFalsy();
   });
 });

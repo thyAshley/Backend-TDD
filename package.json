@@ -6,7 +6,8 @@
   "scripts": {
     "start": "cross-env NODE_ENV=dev nodemon index.ts",
     "client": "http-server -c-1 -p 8080 -P http://localhost:3000",
-    "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles"
+    "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles",
+    "posttest": "cross-env NODE_ENV=test ts-node ./src/utils/testCleanup.ts"
   },
   "keywords": [],
   "author": "",

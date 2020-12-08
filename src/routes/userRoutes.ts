@@ -14,7 +14,19 @@ import { pagination } from "../middleware/paginationMiddleware";
 
 const router = express.Router();
 
-router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
+router
+  .route("/:id")
+  .get(getUser)
+  .put(
+    check("username")
+      .notEmpty()
+      .withMessage("Username cannot be null")
+      .bail()
+      .isLength({ min: 4, max: 32 })
+      .withMessage("Username must be between 4 and 32 characters"),
+    updateUser
+  )
+  .delete(deleteUser);
 
 router
   .route("/")

@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { sendAccountActivation } from "../email/EmailService";
 import User from "../model/User";
 import * as TokenService from "../utils/TokenService";
+import * as FileService from "../utils/FileService";
 import {
   activateUserByToken,
   getUsers,
@@ -105,6 +106,19 @@ export const updateUser = async (
   res: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const validationErrors = <IDictionary>{};
+    errors
+      .array()
+      .forEach((error) => (validationErrors[error.param] = error.msg));
+    return res.status(400).json({
+      validationErrors: validationErrors,
+      message: "Validation Failure",
+      path: req.originalUrl,
+      timestamp: "",
+    });
+  }
   const user = req.authorization;
   try {
     if (!user || user.id.toString() !== req.params.id.toString()) {
@@ -133,6 +147,10 @@ export const deleteUser = async (
     return next(new ForbiddenException());
   }
   try {
+    const userinDB = await User.findOne({ where: { id: user.id } });
+    if (userinDB.image) {
+      await FileService.deleteProfileImage(userinDB.image);
+    }
     await deleteUserById(user.id);
     res.send();
   } catch (error) {

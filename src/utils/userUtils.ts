@@ -76,15 +76,17 @@ export const updateUserById = async (
   fields: { username: string; image: string }
 ) => {
   const user = await User.findOne({ where: { id: id } });
-  if (fields.image) {
-    const filename = await FileService.saveProfileImage(fields.image);
-    user.image = filename;
-  }
 
   if (fields.username) {
     user.username = fields.username;
   }
-
+  if (fields.image) {
+    if (user.image) {
+      await FileService.deleteProfileImage(user.image);
+    }
+    const filename = await FileService.saveProfileImage(fields.image);
+    user.image = filename;
+  }
   await user.save();
 
   return {
