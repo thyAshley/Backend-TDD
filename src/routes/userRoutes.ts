@@ -1,5 +1,6 @@
 import express from "express";
 import { check } from "express-validator";
+import FileType from "file-type";
 
 import { findExistingEmail } from "../utils/userUtils";
 import {
@@ -24,11 +25,18 @@ router
       .bail()
       .isLength({ min: 4, max: 32 })
       .withMessage("Username must be between 4 and 32 characters"),
-    check("image").custom((image) => {
-      if (image) {
-        const buffer = Buffer.from(image, "base64");
-        if (buffer.length > 2 * 1024 * 1024) {
+    check("image").custom(async (imageAsBase64String) => {
+      if (imageAsBase64String) {
+        const buffer = Buffer.from(imageAsBase64String, "base64");
+        if (buffer.toString().length > 2 * 1024 * 1024) {
           throw new Error("Your profile image cannot be bigger than 2MB");
+        }
+        const type = await FileType.fromBuffer(buffer);
+        if (
+          !type ||
+          (type.mime !== "image/png" && type.mime !== "image/jpeg")
+        ) {
+          throw new Error("Only JPEG or PNG files are allowed");
         }
       }
       return true;

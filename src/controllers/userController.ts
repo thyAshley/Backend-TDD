@@ -114,7 +114,6 @@ export const updateUser = async (
       );
     }
     const errors = validationResult(req);
-
     if (!errors.isEmpty()) {
       const validationErrors = <IDictionary>{};
       errors

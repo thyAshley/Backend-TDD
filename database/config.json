@@ -1,0 +1,10 @@
+{
+  "development": {
+    "username": "my-db-user",
+    "password": "db-password",
+    "database": "react-testing",
+    "host": "127.0.0.1",
+    "dialect": "sqlite",
+    "storage": "./database.sqlite"
+  }
+}
