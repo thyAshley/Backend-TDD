@@ -32,6 +32,7 @@ const createUser = async (user = validUser) => {
 };
 beforeAll(async () => {
   await sequelize.sync();
+  TestCleanup.cleanup();
 });
 
 const updateUser = async (
@@ -206,12 +207,11 @@ describe("When user update their image", () => {
 describe("when user upload a new image", () => {
   afterAll(async () => {
     User.destroy({ truncate: true, cascade: true });
-    TestCleanup.cleanup();
   });
   it("remove the old image", async () => {
     const fileInBase64 = readFileAsBase64();
     const saveUser = await createUser();
-    const validUpdate = { image: fileInBase64 };
+    const validUpdate = { image: fileInBase64, username: "user1" };
     const response = await updateUser(
       saveUser.id,
       { auth: { email: validUser.email, password: "P4ssword" } },
@@ -233,6 +233,9 @@ describe("validation check for username updating", () => {
   beforeAll(async () => {
     user = await createUser();
   });
+  afterAll(async () => {
+    await User.destroy({ truncate: true, cascade: true });
+  });
   it.each`
     value             | message
     ${null}           | ${"Username cannot be null"}
@@ -252,4 +255,75 @@ describe("validation check for username updating", () => {
       expect(response.body.validationErrors.username).toBe(message);
     }
   );
+});
+
+describe("When uploading image which is exactly 2mb", () => {
+  const fileWith2MB = "a".repeat(1024 * 1024 * 2);
+  const base64 = Buffer.from(fileWith2MB).toString("base64");
+  const validUpdate = { username: "user1", image: base64 };
+  let user: User;
+  beforeAll(async () => {
+    user = await createUser();
+  });
+  afterAll(async () => {
+    await User.destroy({ truncate: true, cascade: true });
+  });
+  it("returns 200 ok", async () => {
+    const response = await updateUser(
+      user.id,
+      { auth: { email: user.email, password: "P4ssword" } },
+      validUpdate
+    );
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("When uploading image which is exceeds 2mb", () => {
+  const fileWith2MB = "a".repeat(1024 * 1024 * 2 + 1);
+  const base64 = Buffer.from(fileWith2MB).toString("base64");
+  const validUpdate = { username: "user1", image: base64 };
+  let response: request.Response;
+  let user: User;
+  beforeAll(async () => {
+    user = await createUser();
+    response = await updateUser(
+      user.id,
+      { auth: { email: user.email, password: "P4ssword" } },
+      validUpdate
+    );
+  });
+  afterAll(async () => {
+    await User.destroy({ truncate: true, cascade: true });
+  });
+  it("returns 400 error", () => {
+    expect(response.status).toBe(400);
+  });
+  it("returns error message", () => {
+    expect(response.body.validationErrors.image).toBe(
+      "Your profile image cannot be bigger than 2MB"
+    );
+  });
+});
+
+describe("keeps existing image if user only update username", () => {
+  it("save the user image as base64", async () => {
+    const fileInBase64 = readFileAsBase64();
+    const saveUser = await createUser();
+    const validUpdate = { username: "user1-update", image: fileInBase64 };
+    const firstUpdate = await updateUser(
+      saveUser.id,
+      { auth: { email: validUser.email, password: "P4ssword" } },
+      validUpdate
+    );
+    const firstImage = firstUpdate.body.image;
+    await updateUser(
+      saveUser.id,
+      { auth: { email: validUser.email, password: "P4ssword" } },
+      { username: "user1-update 1" }
+    );
+    const inDbUser = await User.findOne({ where: { id: saveUser.id } });
+    const profileImagePath = path.join(ProfileDirectory, inDbUser.image);
+    expect(fs.existsSync(profileImagePath)).toBe(true);
+    expect(inDbUser.image).toBe(firstImage);
+  });
 });

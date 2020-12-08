@@ -41,10 +41,10 @@ const addImageToUser = async () => {
     .send({ email: validUser.email, password: validUser.password });
 
   const token = tokenResponse.body.token;
-  await request(app)
+  const response = await request(app)
     .put(`/api/v1/users/${user.id}`)
     .set("Authorization", `Bearer ${token}`)
-    .send({ image: fileInBase64 });
+    .send({ image: fileInBase64, username: "user1" });
   return token;
 };
 
@@ -172,7 +172,7 @@ describe("when deleting user from database", () => {
   it("should delete user image from folder", async () => {
     const token = await addImageToUser();
     const user = await User.findOne({ where: { email: validUser.email } });
-    await deleteUser(user.id, token);
+    const response = await deleteUser(user.id, token);
     expect(fs.existsSync(path.join(profilePath, user.image))).toBeFalsy();
   });
 });

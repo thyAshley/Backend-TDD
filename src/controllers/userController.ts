@@ -106,19 +106,6 @@ export const updateUser = async (
   res: Response,
   next: NextFunction
 ) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const validationErrors = <IDictionary>{};
-    errors
-      .array()
-      .forEach((error) => (validationErrors[error.param] = error.msg));
-    return res.status(400).json({
-      validationErrors: validationErrors,
-      message: "Validation Failure",
-      path: req.originalUrl,
-      timestamp: "",
-    });
-  }
   const user = req.authorization;
   try {
     if (!user || user.id.toString() !== req.params.id.toString()) {
@@ -126,6 +113,21 @@ export const updateUser = async (
         new ForbiddenException("You are not authorize to update the user")
       );
     }
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      const validationErrors = <IDictionary>{};
+      errors
+        .array()
+        .forEach((error) => (validationErrors[error.param] = error.msg));
+      return res.status(400).json({
+        validationErrors: validationErrors,
+        message: "Validation Failure",
+        path: req.originalUrl,
+        timestamp: "",
+      });
+    }
+
     const updatedUser = await updateUserById(req.params.id, req.body);
 
     return res.status(200).send(updatedUser);

@@ -24,6 +24,15 @@ router
       .bail()
       .isLength({ min: 4, max: 32 })
       .withMessage("Username must be between 4 and 32 characters"),
+    check("image").custom((image) => {
+      if (image) {
+        const buffer = Buffer.from(image, "base64");
+        if (buffer.length > 2 * 1024 * 1024) {
+          throw new Error("Your profile image cannot be bigger than 2MB");
+        }
+      }
+      return true;
+    }),
     updateUser
   )
   .delete(deleteUser);
