@@ -10,6 +10,23 @@ import {
 interface ErrorInterface {
   [key: string]: string;
 }
+
+export const getHoax = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  let { size, page } = req.paginations;
+
+  const hoaxes = await HoaxServices.get(size, page);
+  res.status(200).send({
+    hoaxes: hoaxes.rows,
+    page,
+    size,
+    totalPages: hoaxes.count / size,
+  });
+};
+
 export const createHoax = async (
   req: Request,
   res: Response,

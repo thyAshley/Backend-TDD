@@ -70,4 +70,6 @@ User.hasMany(Hoax, {
   foreignKey: "userId",
 });
 
+Hoax.belongsTo(User);
+
 export default User;

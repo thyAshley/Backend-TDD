@@ -1,5 +1,6 @@
 import { Model, DataTypes } from "sequelize";
 import { sequelize } from "../db/database";
+import User from "./User";
 
 class Hoax extends Model implements HoaxAttribute {
   readonly id: number;
