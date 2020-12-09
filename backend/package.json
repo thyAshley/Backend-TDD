@@ -4,10 +4,14 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
-    "start": "cross-env NODE_ENV=dev nodemon index.ts",
+    "start:dev": "cross-env NODE_ENV=dev nodemon index.ts",
+    "start": "cross-env NODE_ENV=production ts-node index.ts",
     "client": "http-server -c-1 -p 8080 -P http://localhost:3000",
     "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles",
-    "posttest": "cross-env NODE_ENV=test ts-node ./src/utils/testCleanup.ts"
+    "posttest": "cross-env NODE_ENV=test ts-node ./src/utils/testCleanup.ts",
+    "test:staging": "cross-env NODE_ENV=staging jest --all ",
+    "migrate:test": "cross-env NODE_ENV=staging sequelize-cli db:migrate",
+    "pretest:staging": "npm run migrate:test"
   },
   "keywords": [],
   "author": "",
@@ -20,10 +24,15 @@
     "express-validator": "^6.7.0",
     "file-type": "^16.0.1",
     "nodemailer": "^6.4.16",
+    "pg": "^8.5.1",
+    "pg-hstore": "^2.3.3",
     "sequelize": "^6.3.5",
     "sequelize-cli": "^6.2.0",
     "sqlite3": "^5.0.0",
-    "ts-jest": "^26.4.4"
+    "ts-jest": "^26.4.4",
+    "winston": "^3.3.3",
+    "cross-env": "^7.0.2",
+    "ts-node": "^9.1.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
@@ -35,7 +44,6 @@
     "@types/smtp-server": "^3.5.5",
     "@types/supertest": "^2.0.10",
     "@types/validator": "^13.1.0",
-    "cross-env": "^7.0.2",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-prettier": "^3.1.4",
     "jest": "^26.6.3",
@@ -44,7 +52,6 @@
     "prettier": "^2.2.1",
     "smtp-server": "^3.8.0",
     "supertest": "^6.0.1",
-    "ts-node": "^9.0.0",
     "typescript": "^4.1.2"
   },
   "eslintConfig": {

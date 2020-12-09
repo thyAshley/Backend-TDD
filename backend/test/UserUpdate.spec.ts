@@ -264,7 +264,6 @@ describe("When uploading image which is exactly 2mb", () => {
   const fileWith2MB = "a".repeat(twoMB - pngByte);
   const base64 = Buffer.from(fileWith2MB).toString("base64");
   const validUpdate = { username: "user1", image: testPng + base64 };
-  console.log(base64.length);
   let user: User;
   beforeAll(async () => {
     user = await createUser();
@@ -305,7 +304,6 @@ describe("When uploading image which is exceeds 2mb", () => {
     expect(response.status).toBe(400);
   });
   it.skip("returns error message", () => {
-    console.log(response.body);
     expect(response.body.validationErrors.image).toBe(
       "Your profile image cannot be bigger than 2MB"
     );

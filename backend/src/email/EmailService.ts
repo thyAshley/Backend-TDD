@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import config from "config";
+import logger from "../utils/Logger";
 
 const mailConfig = config.get<any>("mail");
 
@@ -22,9 +23,8 @@ export const sendAccountActivation = async (
     </div>
     `,
   });
-  if (process.env.NODE_ENV === "dev") {
-    console.log("url: " + nodemailer.getTestMessageUrl(info));
-  }
+
+  logger.info("url: " + nodemailer.getTestMessageUrl(info));
 };
 
 export const sendPasswordResetMail = async (
@@ -44,7 +44,6 @@ export const sendPasswordResetMail = async (
     </div>
     `,
   });
-  if (process.env.NODE_ENV === "dev") {
-    console.log("url: " + nodemailer.getTestMessageUrl(info));
-  }
+
+  logger.info("url: " + nodemailer.getTestMessageUrl(info));
 };
