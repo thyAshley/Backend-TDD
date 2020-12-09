@@ -28,6 +28,15 @@ module.exports = {
       active: {
         type: Sequelize.BOOLEAN,
       },
+      image: {
+        type: Sequelize.STRING,
+      },
+      activationToken: {
+        type: Sequelize.STRING,
+      },
+      passwordResetToken: {
+        type: Sequelize.STRING,
+      },
     });
   },
   down: async (queryInterface, Sequelize) => {

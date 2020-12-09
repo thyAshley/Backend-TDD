@@ -6,6 +6,6 @@ TokenService.scheduleCleanup();
 
 sequelize.sync();
 
-app.listen(3000, () => {
-  console.log("Backend started on port 3000");
+app.listen(3001, () => {
+  console.log("Backend started on port 3001");
 });
