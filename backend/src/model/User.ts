@@ -1,6 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 
 import { sequelize } from "../db/database";
+import Hoax from "./Hoax";
 import Token from "./Token";
 
 const UserModel = Model;
@@ -60,6 +61,11 @@ User.init(
 );
 
 User.hasMany(Token, {
+  onDelete: "cascade",
+  foreignKey: "userId",
+});
+
+User.hasMany(Hoax, {
   onDelete: "cascade",
   foreignKey: "userId",
 });

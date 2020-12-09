@@ -8,6 +8,8 @@ import { sequelize } from "../src/db/database";
 import app from "../src/app";
 import User from "../src/model/User";
 import Token from "../src/model/Token";
+import Hoax from "../src/model/Hoax";
+import { userInfo } from "os";
 
 const validUser = {
   username: "user1",
@@ -162,6 +164,20 @@ describe("when deleting user with valid token and valid user", () => {
     response = await deleteUser(requestUser.id, tokenOne.body.token);
     dbToken = await Token.findAll();
     expect(dbToken).toHaveLength(0);
+  });
+  it("delete all hoax from database", async () => {
+    requestUser = await addUser();
+    const response = await auth();
+    const createhoax = await request(app)
+      .post("/api/v1/hoaxes")
+      .send({ content: "Hoaxes created" })
+      .set("Authorization", `Bearer ${response.body.token}`);
+    let hoaxes = await Hoax.findAll();
+    expect(hoaxes).toHaveLength(1);
+
+    await deleteUser(requestUser.id, response.body.token);
+    hoaxes = await Hoax.findAll();
+    expect(hoaxes).toHaveLength(0);
   });
 });
 

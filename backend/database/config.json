@@ -1,11 +1,11 @@
 {
   "development": {
-    "username": "my-db-user",
-    "password": "db-password",
-    "database": "react-testing",
-    "host": "127.0.0.1",
-    "dialect": "sqlite",
-    "storage": "./database.sqlite"
+    "database": "hoaxify",
+    "username": "postgres",
+    "password": "test123",
+    "host": "localhost",
+    "dialect": "postgres",
+    "logging": false
   },
   "staging": {
     "database": "hoaxify",
