@@ -41,10 +41,9 @@ export class UnexpectedException extends Error {
 }
 
 export class AuthenticationException extends Error {
-  constructor() {
-    super();
+  constructor(message: string = "Invalid account details provided") {
+    super(message);
     this.status = 401;
-    this.message = "Invalid account details provided";
     this.name = "AuthenticationException";
   }
 }

@@ -4,6 +4,7 @@ import path from "path";
 
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
+import hoaxRoutes from "./routes/hoaxRoutes";
 import { tokenAuthentication } from "./middleware/tokenAuthentication";
 import * as FileService from "./utils/FileService";
 
@@ -17,8 +18,11 @@ FileService.createFolder();
 
 app.use(express.json({ limit: "3mb" }));
 app.use(tokenAuthentication);
+
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/hoaxes", hoaxRoutes);
+
 app.use("/images", express.static(profileFolder, { maxAge: ONE_YEAR_IN_TIME }));
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   return res.status(err.status).json({
