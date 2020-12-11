@@ -7,6 +7,7 @@ import Hoax from "../src/model/Hoax";
 
 const getHoaxes = () => {
   const agent = request(app).get(`/api/v1/hoaxes`);
+
   return agent;
 };
 
@@ -61,8 +62,41 @@ describe("Listing All Hoaxes", () => {
     const hoax = response.body.hoaxes[0];
     const hoaxKeys = Object.keys(hoax);
     const userKeys = Object.keys(hoax.user);
-    console.log(response.body);
     expect(hoaxKeys).toEqual(["id", "content", "timestamp", "user"]);
     expect(userKeys).toEqual(["id", "username", "email", "image"]);
+  });
+  it("return 2 as totalPages when there are 11 hoaxes", async () => {
+    await createHoaxes(11);
+    const response = await getHoaxes();
+    expect(response.body.totalPages).toBe(2);
+  });
+  it("return second page hoaxes when page is set to 1", async () => {
+    await createHoaxes(11);
+    const response = await getHoaxes().query({ page: 1 });
+    expect(response.body.page).toBe(1);
+    expect(response.body.hoaxes).toHaveLength(1);
+  });
+  it("return page 0 hoaxes when page is set to invalid value", async () => {
+    const response = await getHoaxes().query({ page: -5 });
+    expect(response.body.page).toBe(0);
+  });
+  it("return 5 hoaxes when size is set to 5", async () => {
+    await createHoaxes(11);
+    const response = await getHoaxes().query({ size: 5 });
+    expect(response.body.page).toBe(0);
+    expect(response.body.hoaxes).toHaveLength(5);
+  });
+  it("return 10 hoaxes when size is set to more than 100", async () => {
+    await createHoaxes(11);
+    const response = await getHoaxes().query({ size: 100 });
+    expect(response.body.page).toBe(0);
+    expect(response.body.hoaxes).toHaveLength(10);
+  });
+  it("returns hoaxes from newest to oldest", async () => {
+    await createHoaxes(11);
+    const response = await getHoaxes();
+    const firstHoax = response.body.hoaxes[0];
+    const lastHoax = response.body.hoaxes[9];
+    expect(firstHoax.timestamp).toBeGreaterThanOrEqual(lastHoax.timestamp);
   });
 });

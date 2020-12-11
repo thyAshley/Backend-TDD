@@ -14,6 +14,7 @@ export const get = async (limit: number = 10, page: number = 0) => {
     limit: limit,
     offset: page * limit,
     attributes: ["id", "content", "timestamp"],
+    order: [["id", "DESC"]],
     include: {
       model: User,
       as: "user",

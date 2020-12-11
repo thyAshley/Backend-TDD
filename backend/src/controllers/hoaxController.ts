@@ -23,7 +23,7 @@ export const getHoax = async (
     hoaxes: hoaxes.rows,
     page,
     size,
-    totalPages: hoaxes.count / size,
+    totalPages: Math.ceil(hoaxes.count / size),
   });
 };
 
