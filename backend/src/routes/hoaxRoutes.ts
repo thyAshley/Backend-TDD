@@ -14,5 +14,6 @@ router
       .withMessage("Hoaxes must be between 10 to 500 character long"),
     HoaxController.createHoax
   );
+router.route("/users/:id").get(pagination, HoaxController.getHoaxByUserId);
 
 export default router;

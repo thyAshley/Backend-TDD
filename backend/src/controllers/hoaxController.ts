@@ -11,6 +11,29 @@ interface ErrorInterface {
   [key: string]: string;
 }
 
+export const getHoaxByUserId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { page, size } = req.paginations;
+  try {
+    const hoaxes = await HoaxServices.getHoaxesOfUser(
+      req.params.id,
+      page,
+      size
+    );
+    res.status(200).send({
+      hoaxes: hoaxes.rows,
+      page: page,
+      size: size,
+      totalPages: Math.ceil(page / size),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getHoax = async (
   req: Request,
   res: Response,
