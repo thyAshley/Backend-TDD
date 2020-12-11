@@ -16,4 +16,6 @@ router
   );
 router.route("/users/:id").get(pagination, HoaxController.getHoaxByUserId);
 
+router.post("/attachments", HoaxController.addAttachment);
+
 export default router;

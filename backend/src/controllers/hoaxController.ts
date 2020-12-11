@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 
 import * as HoaxServices from "../utils/HoaxServices";
+import * as FileServices from "../utils/FileService";
+
 import {
   AuthenticationException,
   UnexpectedException,
@@ -10,6 +12,15 @@ import {
 interface ErrorInterface {
   [key: string]: string;
 }
+
+export const addAttachment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  await FileServices.saveAttachment();
+  res.status(200).send();
+};
 
 export const getHoaxByUserId = async (
   req: Request,
