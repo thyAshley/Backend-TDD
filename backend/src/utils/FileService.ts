@@ -37,9 +37,11 @@ export const deleteProfileImage = async (image: string) => {
   await fs.promises.unlink(filePath);
 };
 
-export const saveAttachment = async () => {
+export const saveAttachment = async (file: Express.Multer.File) => {
+  const filename = randomString(32);
+  fs.promises.writeFile(path.join(attachmentFolder, filename), file.buffer);
   await FileAttachment.create({
-    filename: randomString(32),
+    filename: filename,
     uploadDate: new Date(),
   });
 };

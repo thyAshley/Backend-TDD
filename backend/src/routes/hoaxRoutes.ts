@@ -1,9 +1,13 @@
 import express from "express";
 import { check } from "express-validator";
+import multer from "multer";
+
 import { pagination } from "../middleware/paginationMiddleware";
 import * as HoaxController from "../controllers/hoaxController";
 
 const router = express.Router();
+
+const upload = multer();
 
 router
   .route("/")
@@ -16,6 +20,10 @@ router
   );
 router.route("/users/:id").get(pagination, HoaxController.getHoaxByUserId);
 
-router.post("/attachments", HoaxController.addAttachment);
+router.post(
+  "/attachments",
+  upload.single("file"),
+  HoaxController.addAttachment
+);
 
 export default router;

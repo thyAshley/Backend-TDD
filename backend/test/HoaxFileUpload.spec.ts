@@ -7,7 +7,7 @@ import app from "../src/app";
 import FileAttachment from "../src/model/FileAttachment";
 import { sequelize } from "../src/db/database";
 
-const { uploadDir, attachmentDir } = config;
+const { uploadDir, attachmentDir }: any = config;
 
 beforeAll(async () => {
   if (process.env.NODE_ENV === "test") {

@@ -18,7 +18,8 @@ export const addAttachment = async (
   res: Response,
   next: NextFunction
 ) => {
-  await FileServices.saveAttachment();
+  const file = req.file;
+  await FileServices.saveAttachment(req.file);
   res.status(200).send();
 };
 
