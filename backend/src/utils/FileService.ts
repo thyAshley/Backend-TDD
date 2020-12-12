@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
+import FileType from "file-type";
 import config from "config";
+
 import { randomString } from "./generator";
 import { UnexpectedException } from "./errorUtils";
 import FileAttachment from "../model/FileAttachment";
@@ -38,10 +40,18 @@ export const deleteProfileImage = async (image: string) => {
 };
 
 export const saveAttachment = async (file: Express.Multer.File) => {
-  const filename = randomString(32);
+  const type = await FileType.fromBuffer(file.buffer);
+  let filename = randomString(32);
+  let fileType;
+  if (type) {
+    fileType = type.mime;
+    filename += `.${type.ext}`;
+  }
+
   fs.promises.writeFile(path.join(attachmentFolder, filename), file.buffer);
   await FileAttachment.create({
     filename: filename,
     uploadDate: new Date(),
+    fileType: fileType,
   });
 };

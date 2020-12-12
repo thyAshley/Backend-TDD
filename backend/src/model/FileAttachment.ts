@@ -5,11 +5,13 @@ class FileAttachment extends Model implements FileAttachmentAttribute {
   readonly id: number;
   public filename: string;
   public uploadDate: Date;
+  public fileType: string;
 }
 
 interface FileAttachmentAttribute {
   readonly id: number;
   filename: string;
+  fileType: string;
   uploadDate: Date;
 }
 
@@ -20,6 +22,9 @@ FileAttachment.init(
     },
     uploadDate: {
       type: DataTypes.DATE,
+    },
+    fileType: {
+      type: DataTypes.STRING,
     },
   },
   {

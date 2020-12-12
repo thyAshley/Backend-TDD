@@ -20,12 +20,10 @@ beforeEach(async () => {
 });
 
 describe("Upload file for Hoax", () => {
-  const filePath = path.join(__dirname, "resources", "test-png.png");
-
-  const uploadFile = () => {
+  const uploadFile = (file = "test-png.png") => {
     return request(app)
       .post("/api/v1/hoaxes/attachments")
-      .attach("file", filePath)
+      .attach("file", path.join(__dirname, "resources", file))
       .set("Connection", "keep-alive");
   };
   it("returns 200 after successful upload", async () => {
@@ -51,4 +49,42 @@ describe("Upload file for Hoax", () => {
     );
     expect(fs.existsSync(filePath)).toBe(true);
   });
+  it.each`
+    file              | fileType
+    ${"test-txt.txt"} | ${null}
+    ${"test-png.png"} | ${"image/png"}
+    ${"test-png"}     | ${"image/png"}
+    ${"test-jpg.jpg"} | ${"image/jpeg"}
+    ${"test-gif.gif"} | ${"image/gif"}
+  `("saves $fileType when $file is uploaded", async ({ file, fileType }) => {
+    await uploadFile(file);
+    const attachments = await FileAttachment.findAll();
+    expect(attachments[0].fileType).toBe(fileType);
+  });
+  it.each`
+    file              | extension
+    ${"test-txt.txt"} | ${null}
+    ${"test-png.png"} | ${"png"}
+    ${"test-png"}     | ${"png"}
+    ${"test-jpg.jpg"} | ${"jpeg"}
+    ${"test-gif.gif"} | ${"gif"}
+  `(
+    "saves $file with $extension when uploaded",
+    async ({ file, extension }) => {
+      await uploadFile(file);
+      const attachments = await FileAttachment.findAll();
+      if (file === "test-txt.txt") {
+        expect(attachments[0].filename.endsWith("txt")).toBe(false);
+      } else {
+        expect(attachments[0].fileType.endsWith(extension)).toBe(true);
+      }
+      const filePath = path.join(
+        ".",
+        uploadDir,
+        attachmentDir,
+        attachments[0].filename
+      );
+      expect(fs.existsSync(filePath)).toBe(true);
+    }
+  );
 });
