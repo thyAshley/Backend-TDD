@@ -87,4 +87,12 @@ describe("Upload file for Hoax", () => {
       expect(fs.existsSync(filePath)).toBe(true);
     }
   );
+  it("returns 400 when uploaded file size is bigger than 5MB", async () => {
+    const response = await uploadFile("5mbfile");
+    expect(response.status).toBe(400);
+  });
+  it("returns 400 when uploaded file size is bigger than 5MB", async () => {
+    const response = await uploadFile("5mbfile");
+    expect(response.body.message).toBe("File cannot be bigger than 5MB");
+  });
 });

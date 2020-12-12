@@ -1,13 +1,31 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { check } from "express-validator";
 import multer from "multer";
 
 import { pagination } from "../middleware/paginationMiddleware";
 import * as HoaxController from "../controllers/hoaxController";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const upload = multer({ limits: { fileSize: MAX_FILE_SIZE } }).single("file");
+
 const router = express.Router();
 
-const upload = multer();
+router.post(
+  "/attachments",
+  upload,
+  async (
+    err: multer.MulterError,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    if (err) {
+      req.validationErrors = "File size exceeded";
+    }
+    next();
+  },
+  HoaxController.addAttachment
+);
 
 router
   .route("/")
@@ -19,11 +37,5 @@ router
     HoaxController.createHoax
   );
 router.route("/users/:id").get(pagination, HoaxController.getHoaxByUserId);
-
-router.post(
-  "/attachments",
-  upload.single("file"),
-  HoaxController.addAttachment
-);
 
 export default router;

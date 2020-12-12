@@ -7,6 +7,7 @@ import * as FileServices from "../utils/FileService";
 import {
   AuthenticationException,
   UnexpectedException,
+  ValidationException,
 } from "../utils/errorUtils";
 
 interface ErrorInterface {
@@ -18,9 +19,13 @@ export const addAttachment = async (
   res: Response,
   next: NextFunction
 ) => {
-  const file = req.file;
-  await FileServices.saveAttachment(req.file);
-  res.status(200).send();
+  if (req.validationErrors === "File size exceeded") {
+    return next(new ValidationException("File cannot be bigger than 5MB"));
+  }
+  if (req.file) {
+    await FileServices.saveAttachment(req.file);
+  }
+  res.status(200).send("");
 };
 
 export const getHoaxByUserId = async (
