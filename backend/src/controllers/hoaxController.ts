@@ -22,10 +22,15 @@ export const addAttachment = async (
   if (req.validationErrors === "File size exceeded") {
     return next(new ValidationException("File cannot be bigger than 5MB"));
   }
-  if (req.file) {
-    await FileServices.saveAttachment(req.file);
+  try {
+    let attachment;
+    if (req.file) {
+      attachment = await FileServices.saveAttachment(req.file);
+    }
+    res.status(200).send(attachment);
+  } catch (error) {
+    return next(new UnexpectedException());
   }
-  res.status(200).send("");
 };
 
 export const getHoaxByUserId = async (

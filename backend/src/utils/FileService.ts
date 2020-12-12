@@ -6,6 +6,7 @@ import config from "config";
 import { randomString } from "./generator";
 import { UnexpectedException } from "./errorUtils";
 import FileAttachment from "../model/FileAttachment";
+import { save } from "./HoaxServices";
 
 const uploadDir: string = config.get("uploadDir");
 const profileDir: string = config.get("profileDir");
@@ -49,9 +50,24 @@ export const saveAttachment = async (file: Express.Multer.File) => {
   }
 
   fs.promises.writeFile(path.join(attachmentFolder, filename), file.buffer);
-  await FileAttachment.create({
+  const saveAttachment = await FileAttachment.create({
     filename: filename,
     uploadDate: new Date(),
     fileType: fileType,
   });
+  return {
+    id: saveAttachment.id,
+  };
+};
+
+export const associateFileToHoax = async (
+  attachmentId: string,
+  hoaxId: string
+) => {
+  const attachment = await FileAttachment.findOne({
+    where: { id: attachmentId },
+  });
+  if (!attachment) return;
+  attachment.hoaxId = hoaxId;
+  await attachment.save();
 };

@@ -1,10 +1,19 @@
 import request from "supertest";
 import bcrypt from "bcryptjs";
+import path from "path";
 
 import app from "../src/app";
 import { sequelize } from "../src/db/database";
 import User from "../src/model/User";
 import Hoax from "../src/model/Hoax";
+import FileAttachment from "../src/model/FileAttachment";
+
+const uploadFile = (file = "test-png.png") => {
+  return request(app)
+    .post("/api/v1/hoaxes/attachments")
+    .attach("file", path.join(__dirname, "resources", file))
+    .set("Connection", "keep-alive");
+};
 
 const postHoax = async (
   body?: {},
@@ -43,7 +52,8 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await User.destroy({ truncate: true, cascade: true });
-  await Hoax.destroy({ truncate: true });
+  await Hoax.destroy({ truncate: true, cascade: true });
+  await FileAttachment.destroy({ truncate: true });
 });
 
 describe("When Posting hoax without authentication", () => {
@@ -171,4 +181,32 @@ describe("When Posting hoax with content less than 10 character", () => {
       expect(response.body.validationErrors.content).toBe(message);
     }
   );
+
+  it("associates hoax with attachment in database", async () => {
+    const uploadResponse = await uploadFile();
+    const uploadId = uploadResponse.body.id;
+    await createUser();
+    await postHoax(
+      { content: "Hoax content", fileAttachment: uploadId },
+      {
+        auth: credentials,
+      }
+    );
+    const hoaxes = await Hoax.findAll();
+    const attachmentinDB = await FileAttachment.findOne({
+      where: { id: uploadId },
+    });
+    expect(attachmentinDB.hoaxId).toBe(hoaxes[0].id);
+  });
+
+  it("returns 200 when attachment does not exist", async () => {
+    await createUser();
+    const response = await postHoax(
+      { content: "Hoax content", fileAttachment: 1000 },
+      {
+        auth: credentials,
+      }
+    );
+    expect(response.status).toBe(200);
+  });
 });

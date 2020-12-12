@@ -6,6 +6,7 @@ class FileAttachment extends Model implements FileAttachmentAttribute {
   public filename: string;
   public uploadDate: Date;
   public fileType: string;
+  public hoaxId: string;
 }
 
 interface FileAttachmentAttribute {
@@ -13,6 +14,7 @@ interface FileAttachmentAttribute {
   filename: string;
   fileType: string;
   uploadDate: Date;
+  hoaxId: string;
 }
 
 FileAttachment.init(

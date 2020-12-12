@@ -1,5 +1,6 @@
 import { Model, DataTypes } from "sequelize";
 import { sequelize } from "../db/database";
+import FileAttachment from "./FileAttachment";
 import User from "./User";
 
 class Hoax extends Model implements HoaxAttribute {
@@ -31,5 +32,10 @@ Hoax.init(
     timestamps: false,
   }
 );
+
+Hoax.hasOne(FileAttachment, {
+  onDelete: "cascade",
+  foreignKey: "hoaxId",
+});
 
 export default Hoax;

@@ -36,7 +36,7 @@ describe("Hoax Attachment", () => {
     });
     it("returns cache for 1 year in response", async () => {
       const storedFileName = copyFile();
-      const response = await request(app).get(`/images/${storedFileName}`);
+      const response = await request(app).get(`/attachments/${storedFileName}`);
       const oneYear = 365 * 24 * 60 * 60;
       expect(response.header["cache-control"]).toContain(`max-age=${oneYear}`);
     });

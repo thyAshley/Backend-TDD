@@ -4,8 +4,9 @@ import User from "../src/model/User";
 import { sequelize } from "../src/db/database";
 import app from "../src/app";
 import Hoax from "../src/model/Hoax";
-import { createHoax } from "../src/controllers/hoaxController";
+import FileAttachment from "../src/model/FileAttachment";
 
+FileAttachment;
 const getHoaxes = () => {
   const agent = request(app).get(`/api/v1/hoaxes`);
 
@@ -13,18 +14,21 @@ const getHoaxes = () => {
 };
 
 const createHoaxes = async (count: number, userId?: number) => {
+  const hoaxId = [];
   for (let i = 0; i < count; i++) {
     const user = await User.create({
       username: `user${i + 1}`,
       email: `user${i + 1}@mail.com`,
       password: "temp",
     });
-    await Hoax.create({
+    const hoax = await Hoax.create({
       content: `hoax content ${i + 1}`,
       timestamp: Date.now(),
       userId: user.id,
     });
+    hoaxId.push(hoax.id);
   }
+  return hoaxId;
 };
 
 describe("Listing All Hoaxes", () => {
@@ -113,6 +117,14 @@ describe("Listing Hoaxes of a user", () => {
     }
   };
 
+  const addFileAttachment = async (hoaxId) => {
+    await FileAttachment.create({
+      filename: `test-file-${hoaxId}`,
+      fileType: "image/png",
+      hoaxId: hoaxId,
+    });
+  };
+
   const getUserHoaxes = (id: string) => {
     const agent = request(app).get(`/api/v1/hoaxes/users/${id}`);
 
@@ -132,7 +144,8 @@ describe("Listing Hoaxes of a user", () => {
   });
 
   afterEach(async () => {
-    User.destroy({ truncate: true, cascade: true });
+    await User.destroy({ truncate: true, cascade: true });
+    await FileAttachment.destroy({ truncate: true });
   });
 
   it("returns 200 ok when there is no hoaxes in database", async () => {
@@ -174,6 +187,7 @@ describe("Listing Hoaxes of a user", () => {
     expect(hoaxKeys).toEqual(["id", "content", "timestamp", "user"]);
     expect(userKeys).toEqual(["id", "username", "email", "image"]);
   });
+
   it("return 2 as totalPages when there are 11 hoaxes", async () => {
     const user = await addUser();
     await createHoaxes(11, user.id);

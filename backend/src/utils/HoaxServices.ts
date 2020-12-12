@@ -1,13 +1,24 @@
 import User from "../model/User";
 import Hoax from "../model/Hoax";
 import { NotFoundException } from "./errorUtils";
+import * as FileService from "./FileService";
 
-export const save = async (body: { content: string }, id: string) => {
-  await Hoax.create({
+export const save = async (
+  body: { content: string; fileAttachment?: string },
+  id: string
+) => {
+  const hoax = await Hoax.create({
     ...body,
     timestamp: Date.now(),
     userId: id,
   });
+  const { id: hoaxId } = hoax;
+  if (body.fileAttachment) {
+    await FileService.associateFileToHoax(
+      body.fileAttachment,
+      hoaxId.toString()
+    );
+  }
 };
 
 export const get = async (limit: number = 10, page: number = 0) => {

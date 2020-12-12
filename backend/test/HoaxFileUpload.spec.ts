@@ -94,5 +94,10 @@ describe("Upload file for Hoax", () => {
   it("returns 400 when uploaded file size is bigger than 5MB", async () => {
     const response = await uploadFile("5mbfile");
     expect(response.body.message).toBe("File cannot be bigger than 5MB");
+    expect(response.body.path).toBe("/api/v1/hoaxes/attachments");
+  });
+  it("returns attachment id in response", async () => {
+    const response = await uploadFile();
+    expect(Object.keys(response.body)).toEqual(["id"]);
   });
 });
